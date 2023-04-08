@@ -20,6 +20,24 @@ class ChoreController extends Controller
         return view('chore.create');
     }
 
+    public function show($slug) {
+        return view('chore.show', [
+            'chore' => Chore::where('slug', $slug)->first()
+        ]);
+    }
+
+    public function edit($slug) {
+        $chore = Chore::where('slug', $slug)->first();
+        $choreMonth = floor($chore->occurrence_hours / 730);
+        $chore->occurrence_hours -= $choreMonth * 730;
+        $choreDay = floor($chore->occurrence_hours / 24);
+        return view('chore.edit', [
+            'chore' => Chore::where('slug', $slug)->first(),
+            'choreMonth' => $choreMonth,
+            'choreDay' => $choreDay
+        ]);
+    }
+
     public function store(StoreChoreRequest $request) {
         // Get our slug and see if we already have one
         $slug = Str::slug($request->name, '-');
@@ -36,6 +54,6 @@ class ChoreController extends Controller
             'occurrence_hours' => $hours
         ]);
 
-            return redirect()->route('chores.index'); //->with('success', 'Chore created successfully!');
+        return redirect()->route('chores.index'); //->with('success', 'Chore created successfully!');
     }
 }
