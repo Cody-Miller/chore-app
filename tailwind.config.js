@@ -36,6 +36,19 @@ module.exports = {
                     800: '#9D6843',
                     900: '#764E32'
                 },
+                'cameo': {
+                    DEFAULT: '#DCC0AD',
+                    50: '#FFFFFF',
+                    100: '#FFFFFF',
+                    200: '#FFFFFF',
+                    300: '#F4ECE6',
+                    400: '#E8D6CA',
+                    500: '#DCC0AD',
+                    600: '#CBA286',
+                    700: '#BA845E',
+                    800: '#9D6843',
+                    900: '#764E32'
+                },
                 'blossom': {
                     DEFAULT: '#D9A5C0',
                     50: '#FFFFFF',
