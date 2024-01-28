@@ -11,8 +11,9 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                    <form method="PUT" action="/chores">
+                    <form method="POST" action="/chores/{{ $chore->slug }}" enctype="multipart/form-data">
                         @csrf
+                        @method('PATCH')
 
                         <x-form.input default='{{ $chore->name }}' name='name' type='text'>{{ __('Name:') }}</x-form.input>
                         <x-form.input default='{{ $chore->description }}' name='desc' type='text'>{{ __('Description:') }}</x-form.input>
@@ -70,7 +71,7 @@
                             </div>
                         </div>
                         <x-primary-button class="mt-5">
-                            {{ __('Create') }}
+                            {{ __('Update') }}
                         </x-primary-button>
                     </form>
                 </div>

@@ -13,6 +13,7 @@
 
                     <form method="POST" action="/chores">
                         @csrf
+                        @method('POST')
 
                         <x-form.input name='name' type='text'>{{ __('Name:') }}</x-form.input>
                         <x-form.input name='desc' type='text'>{{ __('Description:') }}</x-form.input>

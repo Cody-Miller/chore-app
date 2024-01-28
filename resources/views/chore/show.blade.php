@@ -22,15 +22,13 @@
                             <div class="mb-4">
                                 <h1>Recent Completions</h1>
                                 <ul class="list-disc list-inside leading-4">
-                                    
-                                        <li>10/24/1991 - CJM - 6 points</li>
-                                        <li>10/24/1991 - CJM - 6 points</li>
-                                        <li>10/24/1991 - CJM - 6 points</li>
-                                        <li>10/24/1991 - CJM - 6 points</li>
-                                        <li>10/24/1991 - CJM - 6 points</li>
-                                        <li>10/24/1991 - CJM - 6 points</li>
-                                        <li>10/24/1991 - CJM - 6 points</li>
-                                    
+                                    <li>10/24/1991 - CJM - 6 points</li>
+                                    <li>10/24/1991 - CJM - 6 points</li>
+                                    <li>10/24/1991 - CJM - 6 points</li>
+                                    <li>10/24/1991 - CJM - 6 points</li>
+                                    <li>10/24/1991 - CJM - 6 points</li>
+                                    <li>10/24/1991 - CJM - 6 points</li>
+                                    <li>10/24/1991 - CJM - 6 points</li>
                                 </ul>
                             </div>
                         @endif
