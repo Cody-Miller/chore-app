@@ -12,11 +12,7 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     @if ($chore)
                         <div class="mb-4">
-                            <p>
-                                <strong>{{ $chore->name }}</strong> - {{  $chore->description  }}
-                            </p>
-                            <span>Weight: {{  $chore->weight  }}</span>
-                            <span class="ml-3">Occurance: {{  $chore->occurrence_hours  }}</span>
+                            <x-chore-display :chore="$chore"/>
                         </div>
                         @if (true) <!-- //$chore->hasHistory() -->
                             <div class="mb-4">
@@ -45,8 +41,9 @@
                             </x-modal.button>
 
                             <x-modal.popup name="deletechore">
-                                <form method="DELETE" action="/chores/{{ $chore->slug }}" class="p-6">
+                                <form method="POST" action="/chores/{{ $chore->slug }}" class="p-6">
                                         @csrf
+                                        @method('DELETE')
                                         <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
                                             Are you sure you want to this chore?
                                         </h2>

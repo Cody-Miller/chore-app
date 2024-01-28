@@ -6,7 +6,7 @@ $classes =  'inline-flex
             px-1
             pt-1
             border-b-2
-            text-sm
+            text-lg
             font-medium
             leading-5
             transition

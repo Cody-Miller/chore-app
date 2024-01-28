@@ -15,8 +15,8 @@
                         @csrf
                         @method('PATCH')
 
-                        <x-form.input default='{{ $chore->name }}' name='name' type='text'>{{ __('Name:') }}</x-form.input>
-                        <x-form.input default='{{ $chore->description }}' name='desc' type='text'>{{ __('Description:') }}</x-form.input>
+                        <x-form.input default='{!! $chore->name !!}' name='name' type='text'>{{ __('Name:') }}</x-form.input>
+                        <x-form.input default='{!! $chore->description !!}' name='desc' type='text'>{{ __('Description:') }}</x-form.input>
                         <div
                             class="flex flex-wrap justify-between"
                             x-data="{

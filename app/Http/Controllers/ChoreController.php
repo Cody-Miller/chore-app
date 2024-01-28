@@ -21,24 +21,6 @@ class ChoreController extends Controller
         return view('chore.create');
     }
 
-    public function show($slug) {
-        return view('chore.show', [
-            'chore' => Chore::where('slug', $slug)->first()
-        ]);
-    }
-
-    public function edit($slug) {
-        $chore = Chore::where('slug', $slug)->first();
-        $choreMonth = floor($chore->occurrence_hours / 730);
-        $chore->occurrence_hours -= $choreMonth * 730;
-        $choreDay = floor($chore->occurrence_hours / 24);
-        return view('chore.edit', [
-            'chore' => Chore::where('slug', $slug)->first(),
-            'choreMonth' => $choreMonth,
-            'choreDay' => $choreDay
-        ]);
-    }
-
     public function store(StoreChoreRequest $request) {
         // Get our slug and see if we already have one
         $slug = Str::slug($request->name, '-');
@@ -58,9 +40,27 @@ class ChoreController extends Controller
         return redirect()->route('chores.index'); //->with('success', 'Chore created successfully!');
     }
 
-    public function update(UpdateChoreRequest $request, $slug) {
-        // Get our slug and see if we already have one
+    public function show($slug) {
+        return view('chore.show', [
+            'chore' => Chore::where('slug', $slug)->first()
+        ]);
+    }
+
+    public function edit($slug) {
         $chore = Chore::where('slug', $slug)->first();
+        $choreMonth = floor($chore->occurrence_hours / 730);
+        $chore->occurrence_hours -= $choreMonth * 730;
+        $choreDay = floor($chore->occurrence_hours / 24);
+        return view('chore.edit', [
+            'chore' => Chore::where('slug', $slug)->first(),
+            'choreMonth' => $choreMonth,
+            'choreDay' => $choreDay
+        ]);
+    }
+
+    public function update(UpdateChoreRequest $request, $slug) {
+        $chore = Chore::where('slug', $slug)->first();
+        // Get our slug and see if we already have one
         $slug = Str::slug($request->name, '-');
         if (Chore::where('slug', '=', $slug)->where('id', '!=', $chore->id)->count() > 0) {
             throw ValidationException::withMessages(['name' => 'Name is too close to another name already in use.']);
@@ -75,5 +75,11 @@ class ChoreController extends Controller
         $chore->save();
 
         return redirect()->route('chores.index'); //->with('success', 'Chore update successfully!');
+    }
+
+    public function destroy ($slug) {
+        $chore = Chore::where('slug', $slug)->first();
+        $chore->delete();
+        return redirect()->route('chores.index'); //->with('success', 'Chore Removed!');
     }
 }

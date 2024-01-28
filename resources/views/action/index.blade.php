@@ -1,3 +1,4 @@
+@props(['chartWeek', 'chartMonth', 'chartYear'])
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -9,14 +10,26 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    {{ __("Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-                    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-                    quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                    consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-                    cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-                    proident, sunt in culpa qui officia deserunt mollit anim id est laborum.") }}
+                    
+                    <div class="p-6 m-16 dark:bg-gray-200 sm:rounded-lg shadow">
+                        {!! $chartWeek->container() !!}
+                    </div>
+                    <div class="p-6 m-16 dark:bg-gray-200 sm:rounded-lg shadow">
+                        {!! $chartMonth->container() !!}
+                    </div>
+                    <div class="p-6 m-16 dark:bg-gray-200 sm:rounded-lg shadow">
+                        {!! $chartYear->container() !!}
+                    </div>
+                    
+                
                 </div>
             </div>
         </div>
     </div>
 </x-app-layout>
+<script src="{{ $chartWeek->cdn() }}"></script>
+<script src="{{ $chartMonth->cdn() }}"></script>
+<script src="{{ $chartYear->cdn() }}"></script>
+{{ $chartWeek->script() }}
+{{ $chartMonth->script() }}
+{{ $chartYear->script() }}

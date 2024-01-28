@@ -33,6 +33,11 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+// About
+Route::get('/about', function () {
+    return view('about');
+})->name('about');
+
 // Actions
 Route::resource('actions', ActionController::class)->middleware(['auth', 'verified']);
 
