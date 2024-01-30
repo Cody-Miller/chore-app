@@ -13,7 +13,7 @@ class ChoreController extends Controller
 {
     public function index() {
         return view('chore.index', [
-            'chores' => Chore::latest()->paginate(3)
+            'chores' => Chore::latest()->paginate(50)
         ]);
     }
 
@@ -24,7 +24,11 @@ class ChoreController extends Controller
     public function store(StoreChoreRequest $request) {
         // Get our slug and see if we already have one
         $slug = Str::slug($request->name, '-');
-        if (Chore::where('slug', '=', $slug)->count() > 0) {
+        if (
+            Chore::where('slug', '=', $slug)
+            ->where('deleted_at', '=', null)
+            ->count() > 0
+        ) {
             throw ValidationException::withMessages(['name' => 'Name is too close to another name already in use.']);
         }
         // Convert our occurrence to hours
@@ -62,7 +66,12 @@ class ChoreController extends Controller
         $chore = Chore::where('slug', $slug)->first();
         // Get our slug and see if we already have one
         $slug = Str::slug($request->name, '-');
-        if (Chore::where('slug', '=', $slug)->where('id', '!=', $chore->id)->count() > 0) {
+        if (
+            Chore::where('slug', '=', $slug)
+            ->where('id', '!=', $chore->id)
+            ->where('deleted_at', '=', null)
+            ->count() > 0
+        ) {
             throw ValidationException::withMessages(['name' => 'Name is too close to another name already in use.']);
         }
         // Convert our occurrence to hours

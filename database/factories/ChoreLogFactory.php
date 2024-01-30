@@ -9,7 +9,7 @@ use App\Models\User;
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Action>
  */
-class ActionFactory extends Factory
+class ChoreLogFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -20,7 +20,8 @@ class ActionFactory extends Factory
     {
         return [
             'chore_id' => Chore::factory(),
-            'user_id' => User::factory()
+            'user_id' => User::factory(),
+            'completed_at' => $this->faker->dateTimeBetween('-10 month', '+0 day')->format('Y-m-d H:m:s')
         ];
     }
 }

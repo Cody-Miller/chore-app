@@ -1,9 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ChoreController;
-use App\Http\Controllers\ActionController;
+use App\Http\Controllers\ChoreLog;
+use App\Http\Controllers\GraphsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,9 +31,10 @@ Route::middleware('auth')->group(function () {
 require __DIR__.'/auth.php';
 
 // Dashboard
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+// Graphs
+Route::get('/graphs', [GraphsController::class, 'index'])->name('graphs.index');
 
 // About
 Route::get('/about', function () {
@@ -39,7 +42,7 @@ Route::get('/about', function () {
 })->name('about');
 
 // Actions
-Route::resource('actions', ActionController::class)->middleware(['auth', 'verified']);
+Route::resource('chorelog', ChoreLog::class)->middleware(['auth', 'verified']);
 
 // Chores
 Route::resource('chores', ChoreController::class)->middleware(['auth', 'verified']);

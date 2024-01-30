@@ -31,6 +31,11 @@
                             Create Chore
                         </x-primary-link-button>
                     </form>
+                    @if ($chores && $chores->count() >= 50)
+                        <div class="p-8">
+                            {{ $chores->links() }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

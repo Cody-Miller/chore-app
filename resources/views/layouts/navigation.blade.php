@@ -22,8 +22,13 @@
                     </x-nav-link>
                 </div>
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('actions.index')" :active="request()->routeIs('actions.index')">
-                        {{ __('History') }}
+                    <x-nav-link :href="route('chorelog.index')" :active="request()->routeIs('chorelog.index')">
+                        {{ __('Completion Log') }}
+                    </x-nav-link>
+                </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                    <x-nav-link :href="route('graphs.index')" :active="request()->routeIs('graphs.index')">
+                        {{ __('Graphs') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -83,8 +88,11 @@
             <x-responsive-nav-link :href="route('chores.index')" :active="request()->routeIs('chores.index')">
                 {{ __('Chores') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('actions.index')" :active="request()->routeIs('actions.index')">
-                {{ __('History') }}
+            <x-responsive-nav-link :href="route('chorelog.index')" :active="request()->routeIs('chorelog.index')">
+                {{ __('Completion Log') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('graphs.index')" :active="request()->routeIs('graphs.index')">
+                {{ __('Graphs') }}
             </x-responsive-nav-link>
         </div>
 
