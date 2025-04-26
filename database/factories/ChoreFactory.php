@@ -17,11 +17,11 @@ class ChoreFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->unique()->word(),
+            'name' => $this->faker->unique()->word() . $this->faker->unique()->word(),
             'slug' => $this->faker->unique()->slug(),
             'description' => $this->faker->paragraph(),
-            'weight' => $this->faker->numberBetween(0, 10),
-            'occurrence_hours' => $this->faker->numberBetween(1, 4380)
+            'weight' => $this->faker->numberBetween(0, 5),
+            'occurrence_hours' => max(floor($this->faker->numberBetween(-25, 1000) / 24) * 24, 0)
         ];
     }
 }

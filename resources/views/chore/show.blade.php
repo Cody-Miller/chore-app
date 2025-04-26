@@ -16,16 +16,15 @@
                         </div>
                         @if (true) <!-- //$chore->hasHistory() -->
                             <div class="mb-4">
-                                <h1>Recent Completions</h1>
-                                <ul class="list-disc list-inside leading-4">
-                                    <li>10/24/1991 - CJM - 6 points</li>
-                                    <li>10/24/1991 - CJM - 6 points</li>
-                                    <li>10/24/1991 - CJM - 6 points</li>
-                                    <li>10/24/1991 - CJM - 6 points</li>
-                                    <li>10/24/1991 - CJM - 6 points</li>
-                                    <li>10/24/1991 - CJM - 6 points</li>
-                                    <li>10/24/1991 - CJM - 6 points</li>
-                                </ul>
+                                @if ($chore->choreLogs && count($chore->choreLogs) > 0)
+                                    <h1>Recent Completions</h1>
+                                    <ul class="list-disc list-inside leading-4">
+                                        @foreach($chore->choreLogs as $choreLog)
+                                            <li>{{ $choreLog->completed_at->format('m/d/y h:i a') }}
+                                                - {{ $choreLog->user?->name }}</li>
+                                        @endforeach
+                                    </ul>
+                                @endif
                             </div>
                         @endif
                         <div>

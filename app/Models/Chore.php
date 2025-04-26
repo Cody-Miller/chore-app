@@ -18,40 +18,66 @@ class Chore extends Model
         'occurrence_hours'
     ];
 
-    public function choreLogs()
-    {
-        return $this->hasMany(ChoreLog::class);
-    }
-
     public static function getDue()
     {
-        return self::whereDoesntHave('choreLogs')
-            ->orWhereHas('choreLogs', function ($query) {
-                $query->select('chore_id')
-                    ->selectRaw('MAX(created_at) as max_created_at')
-                    ->whereNull('deleted_at')
-                    ->groupBy('chore_id')
-                    ->havingRaw('max_created_at < DATE_SUB(NOW(), INTERVAL chores.occurrence_hours HOUR)');
-            })->get();
+        return self::select('chores.*')
+            ->leftJoin('chore_logs', function ($join) {
+                $join->on('chores.id', '=', 'chore_logs.chore_id')
+                    ->whereNull('chore_logs.deleted_at');
+            })
+            ->whereNull('chores.deleted_at')
+            ->where('chores.occurrence_hours', '!=', 0)
+            ->groupBy('chores.id')
+            ->havingRaw(
+                'NOW() >= DATE_ADD(MAX(chore_logs.completed_at), INTERVAL chores.occurrence_hours HOUR) OR MAX(chore_logs.completed_at) IS NULL'
+            )
+            ->get();
     }
 
     public static function getUpcoming()
     {
-        return self::whereDoesntHave('choreLogs')
-            ->orWhereHas('choreLogs', function ($query) {
-                $query->select('chore_id')
-                    ->selectRaw('MAX(created_at) as max_created_at')
-                    ->whereNull('deleted_at')
-                    ->groupBy('chore_id')
-                    ->havingRaw(
-                        'MAX(created_at) BETWEEN DATE_SUB(NOW(), INTERVAL chores.occurrence_hours HOUR) AND DATE_ADD(NOW(), INTERVAL 72 HOUR)'
-                    );
-            })->get();
+        return self::select('chores.*')
+            ->leftJoin('chore_logs', function ($join) {
+                $join->on('chores.id', '=', 'chore_logs.chore_id')
+                    ->whereNull('chore_logs.deleted_at');
+            })
+            ->whereNull('chores.deleted_at')
+            ->where('chores.occurrence_hours', '!=', 0)
+            ->groupBy('chores.id')
+            ->havingRaw(
+                'DATE_ADD(NOW(), INTERVAL 72 HOUR) >= DATE_ADD(MAX(chore_logs.completed_at), INTERVAL chores.occurrence_hours HOUR) AND NOW() < DATE_ADD(MAX(chore_logs.completed_at), INTERVAL chores.occurrence_hours HOUR)'
+            )
+            ->get();
     }
 
     public static function getOneTime()
     {
         return self::whereDoesntHave('choreLogs')->where('occurrence_hours', 0)->get();
+    }
+
+    public function hasCompleted()
+    {
+        return (bool)$this->getLastChoreLog();
+    }
+
+    private function getLastChoreLog()
+    {
+        return $this->choreLogs()->latest()->first();
+    }
+
+    public function choreLogs()
+    {
+        return $this->hasMany(ChoreLog::class)->orderBy('completed_at', 'desc');
+    }
+
+    public function getLastCompletedUser()
+    {
+        return $this->getLastChoreLog()?->user?->name;
+    }
+
+    public function getLastCompletedDate()
+    {
+        return $this->getLastChoreLog()?->completed_at;
     }
 
     public function hasOccurrences()
@@ -64,14 +90,14 @@ class Chore extends Model
         return $this->getOccurrencesMonths() > 1;
     }
 
-    public function hasOccurrenceDay()
-    {
-        return $this->getOccurrencesDays() > 1;
-    }
-
     public function getOccurrencesMonths()
     {
         return floor($this->occurrence_hours / 720);
+    }
+
+    public function hasOccurrenceDay()
+    {
+        return $this->getOccurrencesDays() > 1;
     }
 
     public function getOccurrencesDays()
