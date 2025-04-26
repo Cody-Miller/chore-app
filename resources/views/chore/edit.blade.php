@@ -1,4 +1,4 @@
-@props(['chore' => null, 'choreMonth' => 0, 'choreDay' => 4])
+@props(['due-now-chores' => null, 'choreMonth' => 0, 'choreDay' => 4])
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -15,8 +15,8 @@
                         @csrf
                         @method('PATCH')
 
-                        <x-form.input default='{!! $chore->name !!}' name='name' type='text'>{{ __('Name:') }}</x-form.input>
-                        <x-form.input default='{!! $chore->description !!}' name='desc' type='text'>{{ __('Description:') }}</x-form.input>
+                        <x-form.input :default="$chore->name" name='name'>{{ __('Name:') }}</x-form.input>
+                        <x-form.input :default="$chore->description" name='desc'>{{ __('Description:') }}</x-form.input>
                         <div
                             class="flex flex-wrap justify-between"
                             x-data="{
@@ -26,7 +26,7 @@
                             }"
                         >
                             <div class="flex-col w-23/48 min-w-300">
-                                
+
                                 <x-form.input
                                     name='occurMonth'
                                     type='range'
@@ -54,18 +54,18 @@
 
                             </div>
                             <div class="flex-col w-23/48 min-w-300">
-                                
+
                                 <x-form.input
                                     name='weight'
                                     type='range'
                                     min="1"
-                                    max="10"
+                                    max="5"
                                     x-ref="weightVal"
                                     x-model="weightVal"
                                     default="{{ $chore->weight }}"
                                 >
                                     {{ __('Weight:') }}
-                                </x-form.input>  
+                                </x-form.input>
                                 <output x-text="weightVal">0</output>
 
                             </div>

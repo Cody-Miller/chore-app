@@ -19,8 +19,8 @@ if ($active ?? false) {
     $classes .= 'border-indigo-400
                 text-slate-900
                 focus:border-indigo-700
-                dark:text-indigo-600
-                dark:border-indigo-600
+                dark:text-indigo-500
+                dark:border-indigo-500
                 dark:focus:text-indigo-400
                 dark:focus:border-indigo-400';
 } else {

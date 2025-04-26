@@ -15,4 +15,21 @@ class ChoreLog extends Model
         'user_id',
         'completed_at'
     ];
+
+    public array $dates = ['completed_at'];
+
+    protected $casts = [
+        'completed_at' => 'datetime',
+    ];
+
+    public function chore()
+    {
+        return $this->belongsTo(Chore::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
 }

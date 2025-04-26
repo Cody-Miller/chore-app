@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('chore_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->dateTime('completed_at');
+            $table->timestamp('completed_at')->default(now());
             $table->softDeletes();
             $table->timestamps();
         });

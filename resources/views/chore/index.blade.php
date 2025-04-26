@@ -13,7 +13,7 @@
                     @if ($chores && $chores->count() > 0)
                         <ul>
                             @foreach($chores as $chore)
-                                <li class="mb-4">
+                                <li>
                                     <x-chore-display :chore="$chore"/>
                                 </li>
                             @endforeach
@@ -31,8 +31,8 @@
                             Create Chore
                         </x-primary-link-button>
                     </form>
-                    @if ($chores && $chores->count() >= 50)
-                        <div class="p-8">
+                    @if ($chores)
+                        <div class="mt-8">
                             {{ $chores->links() }}
                         </div>
                     @endif

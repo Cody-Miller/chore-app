@@ -26,7 +26,7 @@
                             }"
                         >
                             <div class="flex-col w-23/48 min-w-300">
-                                
+
                                 <x-form.input
                                     name='occurMonth'
                                     type='range'
@@ -54,18 +54,18 @@
 
                             </div>
                             <div class="flex-col w-23/48 min-w-300">
-                                
+
                                 <x-form.input
                                     name='weight'
                                     type='range'
                                     min="1"
-                                    max="10"
+                                    max="5"
                                     x-ref="weightVal"
                                     x-model="weightVal"
                                     default="1"
                                 >
                                     {{ __('Weight:') }}
-                                </x-form.input>  
+                                </x-form.input>
                                 <output x-text="weightVal">0</output>
 
                             </div>
