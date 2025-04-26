@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateChoreRequest extends FormRequest
+class StoreChoreLogRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -17,8 +17,7 @@ class UpdateChoreRequest extends FormRequest
         return [
             'name' => [
                 'required',
-                // 'unique:chores,name',
-                'unique:chores,name,'.$this->name.',name',
+                'unique:chores,name',
                 'string',
                 'max:255'
             ],

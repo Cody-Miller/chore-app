@@ -3,9 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class StoreChoreRequest extends FormRequest
+class UpdateChoreLogRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -24,6 +23,10 @@ class StoreChoreRequest extends FormRequest
                 'required',
                 'integer',
                 'exists:chores,id'
+            ],
+            'completed_time' => [
+                'required',
+                'date_format:Y-m-d\TH:i:s'
             ]
         ];
     }

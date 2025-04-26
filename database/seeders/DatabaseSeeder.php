@@ -29,15 +29,16 @@ class DatabaseSeeder extends Seeder
             'password' => '$2y$10$r/WVg9UQs3yBsvnwYeRjAe3eEHJAJSFOT1UF3/K.zr0PX8r2CKZbO', //test1234
         ]);
 
-        $chores = Chore::factory(15)->create();
+        $chores = Chore::factory(35)->create();
 
-        for($actionCount = 0; $actionCount < 200; $actionCount++) {
+        for($actionCount = 0; $actionCount < 50; $actionCount++) {
             ChoreLog::factory(15)->create([
-                'chore_id' => $chores[rand(1, 14)],
+                'chore_id' => $chores[rand(1, 17)],
                 'user_id' => rand(1, 2),
+                'completed_at' => $faker->dateTimeBetween('-10 month', '+0 day')->format('Y-m-d H:m:s')
             ]);
         }
 
-        
+
     }
 }

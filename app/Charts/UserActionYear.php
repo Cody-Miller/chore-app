@@ -2,6 +2,7 @@
 
 namespace App\Charts;
 
+use App\Models\ChoreLog;
 use ArielMejiaDev\LarapexCharts\LarapexChart;
 
 class UserActionYear
@@ -15,10 +16,18 @@ class UserActionYear
 
     public function build(): \ArielMejiaDev\LarapexCharts\PieChart
     {
+        $weights = [];
+        $names = [];
+        $records = ChoreLog::getChoreLogsWeightByUsers(now()->subYear(), now());
+        $totalWeight = $records->sum('total_weight');
+        foreach ($records as $record) {
+            $weights[] = round($record->total_weight / $totalWeight * 100, 2);
+            $names[] = $record->name;
+        }
         return $this->chart->pieChart()
             ->setTitle('Last 365 Days')
             ->setSubtitle('Percentage of weighted chores completed')
-            ->addData([76, 10])
-            ->setLabels(['Cody Miller', 'Katelyn Miller']);
+            ->addData($weights)
+            ->setLabels($names);
     }
 }

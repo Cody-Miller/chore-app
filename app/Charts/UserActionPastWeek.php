@@ -2,6 +2,7 @@
 
 namespace App\Charts;
 
+use App\Models\ChoreLog;
 use ArielMejiaDev\LarapexCharts\LarapexChart;
 
 class UserActionPastWeek
@@ -15,11 +16,28 @@ class UserActionPastWeek
 
     public function build(): \ArielMejiaDev\LarapexCharts\BarChart
     {
-        return $this->chart->barChart()
+        $records = ChoreLog::getChoreLogsCountByUsers(now()->subWeek(), now());
+        $userDaysStruct = [];
+        // Prep the data to 0
+        foreach ($records as $record) {
+            for ($i = 0; $i < 7; $i++) {
+                $userDaysStruct[$record->name][$i] = 0;
+            }
+        }
+        foreach ($records as $record) {
+            for ($i = 0; $i < 7; $i++) {
+                if ($record->day == $i) {
+                    $userDaysStruct[$record->name][$i] = $record->chore_count ?? 0;
+                }
+            }
+        }
+        $chart = $this->chart->barChart()
             ->setTitle('Current Week')
             ->setSubtitle('Number of chores complted over the current week.')
-            ->addData('Cody Miller', [6, 9, 3, 4, 10, 8, 0])
-            ->addData('Katelyn Miller', [7, 3, 8, 2, 6, 4, 1])
             ->setXAxis(['Monday', 'Tuesday', 'Wednesday', 'Thrusday', 'Friday', 'Satuerday', 'Sunday']);
+        foreach ($userDaysStruct as $userName => $userChoreCount) {
+            $chart->addData($userName, $userChoreCount);
+        }
+        return $chart;
     }
 }

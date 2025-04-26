@@ -1,6 +1,7 @@
 @props(['name'])
 <div
     x-data="{
+        slug: null,
         show: false,
         focusables() {
             // All focusable element types...
@@ -24,7 +25,7 @@
             document.body.classList.remove('overflow-y-hidden');
         }
     })"
-    x-on:open-modal.window="$event.detail == '{{ $name }}' ? show = true : null"
+    x-on:open-modal.window="$event.detail[0] == '{{ $name }}' ? show = true : null; slug = $event.detail[1]"
     x-on:close.stop="show = false"
     x-on:keydown.escape.window="show = false"
     x-on:keydown.tab.prevent="$event.shiftKey || nextFocusable().focus()"

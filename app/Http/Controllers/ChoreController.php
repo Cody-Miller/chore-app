@@ -32,7 +32,7 @@ class ChoreController extends Controller
             throw ValidationException::withMessages(['name' => 'Name is too close to another name already in use.']);
         }
         // Convert our occurrence to hours
-        $hours = ($request->occurDay * 24) + ($request->occurMonth * 730); 
+        $hours = ($request->occurDay * 24) + ($request->occurMonth * 730);
         Chore::create([
             'name' => $request->name,
             'slug' => $slug,
@@ -56,7 +56,7 @@ class ChoreController extends Controller
         $chore->occurrence_hours -= $choreMonth * 730;
         $choreDay = floor($chore->occurrence_hours / 24);
         return view('chore.edit', [
-            'chore' => Chore::where('slug', $slug)->first(),
+            'chore' => $chore,
             'choreMonth' => $choreMonth,
             'choreDay' => $choreDay
         ]);
@@ -75,11 +75,11 @@ class ChoreController extends Controller
             throw ValidationException::withMessages(['name' => 'Name is too close to another name already in use.']);
         }
         // Convert our occurrence to hours
-        $hours = ($request->occurDay * 24) + ($request->occurMonth * 730); 
+        $hours = ($request->occurDay * 24) + ($request->occurMonth * 730);
         $chore->name = $request->name;
         $chore->slug = $slug;
         $chore->description = $request->desc;
-        $chore->weight = $request->weight; 
+        $chore->weight = $request->weight;
         $chore->occurrence_hours = $hours;
         $chore->save();
 
