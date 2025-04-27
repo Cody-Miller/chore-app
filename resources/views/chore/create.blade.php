@@ -11,7 +11,7 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h3>{{ __('Add a new chore!') }}</h3>
 
-                    <form method="POST" action="/chores">
+                    <form method="POST" action="/chores" enctype="multipart/form-data">
                         @csrf
                         @method('POST')
 
