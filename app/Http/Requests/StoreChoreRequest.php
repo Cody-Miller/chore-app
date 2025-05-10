@@ -15,15 +15,30 @@ class StoreChoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => [
+            'name' => [
                 'required',
-                'integer',
-                'exists:users,id'
+                'unique:chores,name',
+                'string',
+                'max:255'
             ],
-            'chore_id' => [
+            'desc' => [
+                'required',
+                'string'
+            ],
+            'occurMonth' => [
                 'required',
                 'integer',
-                'exists:chores,id'
+                'between:0,12'
+            ],
+            'occurDay' => [
+                'required',
+                'integer',
+                'between:0,32'
+            ],
+            'weight' => [
+                'required',
+                'integer',
+                'between:1,5'
             ]
         ];
     }

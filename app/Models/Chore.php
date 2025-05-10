@@ -87,7 +87,7 @@ class Chore extends Model
 
     public function hasOccurrenceMonth()
     {
-        return $this->getOccurrencesMonths() > 1;
+        return $this->getOccurrencesMonths() > 0;
     }
 
     public function getOccurrencesMonths()
@@ -97,7 +97,7 @@ class Chore extends Model
 
     public function hasOccurrenceDay()
     {
-        return $this->getOccurrencesDays() > 1;
+        return $this->getOccurrencesDays() > 0;
     }
 
     public function getOccurrencesDays()
