@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreChoreLogRequest;
 use App\Http\Requests\UpdateChoreLogRequest;
 use App\Models\Chore;
 use App\Models\ChoreLog;
@@ -20,11 +19,11 @@ class ChoreLogController extends Controller
         ]);
     }
 
-    public function store($chore) {
-        $chore = Chore::findOrFail($chore);
+    public function store(Chore $chore) {
         ChoreLog::create([
             'chore_id' => $chore->id,
             'user_id' => auth()->user()->id,
+            'completed_at' => now(),
         ]);
         return redirect()->route('dashboard'); //->with('success', 'Chore created successfully!');
     }

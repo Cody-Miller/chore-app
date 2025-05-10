@@ -21,16 +21,12 @@
                     @else
                         <h3>No chores created yet, get in there and make some!</h3>
                     @endif
-                    <form method="POST" action="/chores" enctype="multipart/form-data">
-                        @csrf
-                        @method('POST')
-                        <x-primary-link-button
-                            class="mt-4"
-                            href="/chores/create"
-                        >
-                            Create Chore
-                        </x-primary-link-button>
-                    </form>
+                    <x-primary-link-button
+                        class="mt-4"
+                        href="/chores/create"
+                    >
+                        Create Chore
+                    </x-primary-link-button>
                     @if ($chores)
                         <div class="mt-8">
                             {{ $chores->links() }}
