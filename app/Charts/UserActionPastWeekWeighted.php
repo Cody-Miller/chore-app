@@ -6,7 +6,7 @@ use App\Models\ChoreLog;
 use ArielMejiaDev\LarapexCharts\BarChart;
 use ArielMejiaDev\LarapexCharts\LarapexChart;
 
-class UserActionPastWeek
+class UserActionPastWeekWeighted
 {
     protected LarapexChart $chart;
 
@@ -17,7 +17,7 @@ class UserActionPastWeek
 
     public function build(): BarChart
     {
-        $records = ChoreLog::getChoreLogsCountByUsers(now()->startOfWeek(), now()->endOfWeek());
+        $records = ChoreLog::getChoreLogsWeightByUsers(now()->startOfWeek(), now()->endOfWeek());
         $userDaysStruct = [];
         // Prep the data to 0
         foreach ($records as $record) {
@@ -28,16 +28,16 @@ class UserActionPastWeek
         foreach ($records as $record) {
             for ($i = 0; $i < 7; $i++) {
                 if ($record->day == $i) {
-                    $userDaysStruct[$record->name][$i] = $record->chore_count ?? 0;
+                    $userDaysStruct[$record->name][$i] = $record->total_weight ?? 0;
                 }
             }
         }
         $chart = $this->chart->barChart()
-            ->setTitle('Current Week Counts')
-            ->setSubtitle('Number of chores completed over the current week.')
+            ->setTitle('Current Week Weighted')
+            ->setSubtitle('Total of weight from chores completed over the current week.')
             ->setXAxis(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
-        foreach ($userDaysStruct as $userName => $userChoreCount) {
-            $chart->addData($userName, $userChoreCount);
+        foreach ($userDaysStruct as $userName => $userWeightCount) {
+            $chart->addData($userName, $userWeightCount);
         }
         return $chart;
     }
