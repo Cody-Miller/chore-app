@@ -4,17 +4,18 @@ namespace App\Charts;
 
 use App\Models\ChoreLog;
 use ArielMejiaDev\LarapexCharts\LarapexChart;
+use ArielMejiaDev\LarapexCharts\PieChart;
 
 class UserActionMonth
 {
-    protected $chart;
+    protected LarapexChart $chart;
 
     public function __construct(LarapexChart $chart)
     {
         $this->chart = $chart;
     }
 
-    public function build(): \ArielMejiaDev\LarapexCharts\PieChart
+    public function build(): PieChart
     {
         $weights = [];
         $names = [];

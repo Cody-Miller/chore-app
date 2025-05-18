@@ -38,7 +38,7 @@ class ChoreLog extends Model
             ->join('chores', 'chores.id', '=', 'chore_logs.chore_id')
             ->join('users', 'users.id', '=', 'chore_logs.user_id')
             ->whereBetween('completed_at', [$startDate, $endDate])
-            ->selectRaw('users.name, SUM(chores.weight) as total_weight')
+            ->selectRaw('users.name, SUM(chores.weight) AS total_weight, WEEKDAY(completed_at) AS day')
             ->groupBy('users.id', 'users.name')
             ->get();
     }
@@ -48,7 +48,7 @@ class ChoreLog extends Model
         return static::query()
             ->join('users', 'users.id', '=', 'chore_logs.user_id')
             ->whereBetween('completed_at', [$startDate, $endDate])
-            ->selectRaw('users.name, COUNT(*) as chore_count, WEEKDAY(completed_at) as day')
+            ->selectRaw('users.name, COUNT(*) AS chore_count, WEEKDAY(completed_at) AS day')
             ->groupByRaw('users.id, WEEKDAY(completed_at)')
             ->get();
     }
