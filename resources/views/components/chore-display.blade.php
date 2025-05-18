@@ -22,7 +22,7 @@
     </span>
     @if($quick_complete)
         <x-modal.button class="whitespace-nowrap ml-8 dark:bg-thunder-200" name="complete_chore" :slug="$chore->id">
-            Quick Complete
+            Complete
         </x-modal.button>
     @endif
 </div>
