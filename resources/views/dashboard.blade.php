@@ -15,7 +15,7 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <x-tab.wrapper defaultTabNumber="1">
-                        <x-tab.group>
+                        <x-tab.group class="overflow-x-auto">
                             <x-tab.link tabNumber="1">
                                 {{ __('Due Now') }}
                             </x-tab.link>
