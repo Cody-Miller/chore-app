@@ -38,12 +38,23 @@ class ChoreLog extends Model
             ->join('chores', 'chores.id', '=', 'chore_logs.chore_id')
             ->join('users', 'users.id', '=', 'chore_logs.user_id')
             ->whereBetween('completed_at', [$startDate, $endDate])
-            ->selectRaw('users.name, SUM(chores.weight) AS total_weight, WEEKDAY(completed_at) AS day')
+            ->selectRaw('users.name, SUM(chores.weight) AS total_weight')
             ->groupBy('users.id', 'users.name')
             ->get();
     }
 
-    public static function getChoreLogsCountByUsers($startDate, $endDate)
+    public static function getChoreLogsWeightByUsersAndWeekday($startDate, $endDate)
+    {
+        return static::query()
+            ->join('chores', 'chores.id', '=', 'chore_logs.chore_id')
+            ->join('users', 'users.id', '=', 'chore_logs.user_id')
+            ->whereBetween('completed_at', [$startDate, $endDate])
+            ->selectRaw('users.name, SUM(chores.weight) AS total_weight, WEEKDAY(completed_at) AS day')
+            ->groupByRaw('users.id, WEEKDAY(completed_at)')
+            ->get();
+    }
+
+    public static function getChoreLogsCountByUsersAndWeekday($startDate, $endDate)
     {
         return static::query()
             ->join('users', 'users.id', '=', 'chore_logs.user_id')
