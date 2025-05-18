@@ -17,7 +17,7 @@ class UserActionPastWeek
 
     public function build(): BarChart
     {
-        $records = ChoreLog::getChoreLogsCountByUsers(now()->startOfWeek(), now()->endOfWeek());
+        $records = ChoreLog::getChoreLogsCountByUsersAndWeekday(now()->startOfWeek(), now()->endOfWeek());
         $userDaysStruct = [];
         // Prep the data to 0
         foreach ($records as $record) {
