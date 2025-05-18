@@ -11,13 +11,13 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     
-                    <div class="p-6 m-16 dark:bg-gray-200 sm:rounded-lg shadow">
+                    <div class="p-4 m-4 dark:bg-gray-200 sm:rounded-lg shadow">
                         {!! $chartWeek->container() !!}
                     </div>
-                    <div class="p-6 m-16 dark:bg-gray-200 sm:rounded-lg shadow">
+                    <div class="p-4 m-4 dark:bg-gray-200 sm:rounded-lg shadow">
                         {!! $chartMonth->container() !!}
                     </div>
-                    <div class="p-6 m-16 dark:bg-gray-200 sm:rounded-lg shadow">
+                    <div class="p-4 m-4 dark:bg-gray-200 sm:rounded-lg shadow">
                         {!! $chartYear->container() !!}
                     </div>
                     
