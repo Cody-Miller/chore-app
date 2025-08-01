@@ -6,7 +6,7 @@ use App\Models\ChoreLog;
 use ArielMejiaDev\LarapexCharts\BarChart;
 use ArielMejiaDev\LarapexCharts\LarapexChart;
 
-class UserActionPastWeekWeighted
+class UserActionPastWeekWeighted extends Charts
 {
     protected LarapexChart $chart;
 
@@ -18,6 +18,9 @@ class UserActionPastWeekWeighted
     public function build(): BarChart
     {
         $records = ChoreLog::getChoreLogsWeightByUsersAndWeekday(now()->startOfWeek(), now()->endOfWeek());
+        if ($records->count() > 0) {
+            $this->hasData = true;
+        }
         $userDaysStruct = [];
         // Prep the data to 0
         foreach ($records as $record) {

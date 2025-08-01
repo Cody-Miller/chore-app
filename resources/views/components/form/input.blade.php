@@ -1,8 +1,8 @@
 @props(['name' => null, 'default' => '', 'type' => 'text'])
 <x-form.field>
-    <x-input-label for="{{ $name }}">
+    <x-form.input-label for="{{ $name }}">
         {{ $slot }}
-    </x-input-label>
+    </x-form.input-label>
     <input class="w-full rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-500 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
            name="{{ $name }}"
            id="{{ $name }}"

@@ -11,22 +11,37 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-4 text-gray-900 dark:text-gray-100">
                     @if ($chores && $chores->count() > 0)
-                        <ul>
-                            @foreach($chores as $chore)
-                                <li>
-                                    <x-chore-display :chore="$chore"/>
-                                </li>
-                            @endforeach
-                        </ul>
+                        <div x-data="{ search: '' }">
+
+                            <div class="flex flex-col sm:flex-row justify-between gap-4">
+                                <div class="flex-1 min-w-xl">
+                                    <input
+                                        type="text"
+                                        x-model="search"
+                                        placeholder="Search chores..."
+                                        class="min-w-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-500 rounded-md shadow-sm w-full"
+                                    >
+                                </div>
+                                <x-buttons.primary-link-button
+                                    class="justify-center"
+                                    href="/chores/create"
+                                >
+                                    Create Chore
+                                </x-buttons.primary-link-button>
+                            </div>
+
+                            <ul>
+                                @foreach($chores as $chore)
+                                    <li x-show="!search || '{{ strtolower($chore->name) }}'.includes(search.toLowerCase()) || '{{ strtolower($chore->description) }}'.includes(search.toLowerCase())">
+                                        <x-chore-display :chore="$chore"/>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
                     @else
                         <h3>No chores created yet, get in there and make some!</h3>
                     @endif
-                    <x-primary-link-button
-                        class="mt-4"
-                        href="/chores/create"
-                    >
-                        Create Chore
-                    </x-primary-link-button>
+
                     @if ($chores)
                         <div class="mt-8">
                             {{ $chores->links() }}

@@ -31,7 +31,7 @@
                                     </x-table.body-data-text>
                                     <x-table.body-data-number>{{ $choreLog->chore?->weight }}</x-table.body-data-number>
                                     <x-table.body-data-text>
-                                        <x-primary-link-button href="/chorelog/{{ $choreLog->id }}/edit" >Edit</x-primary-link-button>
+                                        <x-buttons.primary-link-button href="/chorelog/{{ $choreLog->id }}/edit" >Edit</x-buttons.primary-link-button>
                                     </x-table.body-data-text>
                                 </x-table.body-row>
                             @endforeach

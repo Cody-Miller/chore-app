@@ -70,9 +70,9 @@
 
                             </div>
                         </div>
-                        <x-primary-button class="mt-5">
+                        <x-buttons.primary-button class="mt-5">
                             {{ __('Update') }}
-                        </x-primary-button>
+                        </x-buttons.primary-button>
                     </form>
                 </div>
             </div>

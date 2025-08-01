@@ -15,13 +15,23 @@ class GraphsController extends Controller
         UserActionMonth $chartMonth,
         UserActionYear $chartYear,
     ) {
-        return view(
-            'graphs.index', [
-                'chartWeek' => $chartWeek->build(),
-                'chartWeekWeighted' => $chartWeekWeighted->build(),
-                'chartMonth' => $chartMonth->build(),
-                'chartYear' => $chartYear->build(),
-            ]
-        );
+        $return = [];
+        $content = $chartWeek->build();
+        if ($chartWeek->hasData()) {
+            $return['chartWeek'] = $content;
+        }
+        $content = $chartWeekWeighted->build();
+        if ($chartWeekWeighted->hasData()) {
+            $return['chartWeekWeighted'] = $content;
+        }
+        $content = $chartMonth->build();
+        if ($chartMonth->hasData()) {
+            $return['chartMonth'] = $content;
+        }
+        $content = $chartYear->build();
+        if ($chartYear->hasData()) {
+            $return['chartYear'] = $content;
+        }
+        return view('graphs.index', $return);
     }
 }

@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreChoreLogRequest;
+use App\Http\Requests\StoreChoreRequest;
 use App\Http\Requests\UpdateChoreLogRequest;
 use App\Models\Chore;
 use App\Models\ChoreLog;
 use App\Models\User;
+use Carbon\Carbon;
 
 class ChoreLogController extends Controller
 {
@@ -19,10 +22,10 @@ class ChoreLogController extends Controller
         ]);
     }
 
-    public function store(Chore $chore) {
+    public function store(StoreChoreLogRequest $request, Chore $chore) {
         ChoreLog::create([
             'chore_id' => $chore->id,
-            'user_id' => auth()->user()->id,
+            'user_id' => $request->user_id ?? auth()->user()->id,
             'completed_at' => now(),
         ]);
         return redirect()->route('dashboard'); //->with('success', 'Chore created successfully!');
@@ -41,7 +44,7 @@ class ChoreLogController extends Controller
         $choreLog = ChoreLog::where('id', $id)->first();
         $choreLog->chore_id = $request->chore_id;
         $choreLog->user_id = $request->user_id;
-        $choreLog->completed_at = $request->completed_time;
+        $choreLog->completed_at = Carbon::parse($request->completed_time);
         $choreLog->update();
         return redirect()->route('chorelog.index'); //->with('success', 'Chore update successfully!');
     }

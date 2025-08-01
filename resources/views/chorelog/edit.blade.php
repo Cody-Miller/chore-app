@@ -48,9 +48,9 @@
                         >{{ __('Completed Time:') }}</x-form.input>
 
                         <div>
-                            <x-primary-button class="mt-5">
+                            <x-buttons.primary-button class="mt-5">
                                 {{ __('Update') }}
-                            </x-primary-button>
+                            </x-buttons.primary-button>
 
                             <x-modal.button name="deletechorelog">
                                 {{ __('Delete') }}

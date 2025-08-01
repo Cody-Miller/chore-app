@@ -1,3 +1,4 @@
+@php use App\Models\User; @endphp
 @props(['due_now_chores' => null, 'upcoming_chores' => null, 'one_time_chores' => null])
 
 <x-app-layout>
@@ -55,25 +56,7 @@
                         </x-tab.content>
                     </x-tab.wrapper>
 
-                    <x-modal.popup name="complete_chore">
-                        <form class="p-6" method="POST" x-bind:action="'/chorelog/' + choreId">
-                            @csrf
-                            @method('POST')
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                Are you sure you want to Complete this chore?
-                            </h2>
-
-                            <div class="mt-6 flex justify-end">
-                                <x-secondary-button class="px-4 py-2 mx-2" x-on:click="$dispatch('close')">
-                                    Cancel
-                                </x-secondary-button>
-
-                                <x-primary-button class="px-4 py-2 mx-2" type="submit">
-                                    Complete Chore
-                                </x-primary-button>
-                            </div>
-                        </form>
-                    </x-modal.popup>
+                    <x-chore-complete-modal :users="User::all()" x-bind:action="'/chorelog/' + choreId"/>
 
                 </div>
             </div>
