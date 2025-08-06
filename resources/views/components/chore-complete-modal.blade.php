@@ -10,18 +10,28 @@
         <div x-data="{ showSelect: false }">
             <div class="mt-6 flex justify-between">
                 <div class="flex justify-start">
-                    <x-buttons.tertiary-button class="px-4 py-2 mx-2" x-on:click="showSelect = !showSelect"
-                                               type="button">
+                    <x-buttons.tertiary-button
+                        x-on:click="showSelect = !showSelect"
+                        class="px-4 py-2 mx-2"
+                        type="button"
+                    >
                         Complete For Other
                     </x-buttons.tertiary-button>
                 </div>
 
-                <div class="flex justify-end">
-                    <x-buttons.secondary-button class="px-4 py-2 mx-2" x-on:click="$dispatch('close')">
+                <div class="flex justify-end flex-wrap gap-y-2">
+                    <x-buttons.secondary-button
+                        class="px-4 py-2 mx-2 flex-1"
+                        x-on:click="$dispatch('close')"
+                    >
                         Cancel
                     </x-buttons.secondary-button>
 
-                    <x-buttons.primary-button autofocus class="px-4 py-2 mx-2" type="submit">
+                    <x-buttons.primary-button
+                        class="px-4 py-2 mx-2 flex-1"
+                        type="submit"
+                        autofocus
+                    >
                         Complete Chore
                     </x-buttons.primary-button>
                 </div>
@@ -32,7 +42,9 @@
                     <x-form.select-input-option
                         disabled
                         selected
-                        value="">{{ __('Please Select') }}
+                        value=""
+                    >
+                        {{ __('Please Select') }}
                     </x-form.select-input-option>
                     @if ($users && count($users) > 0)
                         @foreach($users as $user)

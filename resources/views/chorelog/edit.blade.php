@@ -45,10 +45,12 @@
                             name='completed_time'
                             :default="$chorelog->completed_at"
                             :type="'datetime-local'"
-                        >{{ __('Completed Time:') }}</x-form.input>
+                        >
+                            {{ __('Completed Time:') }}
+                        </x-form.input>
 
                         <div>
-                            <x-buttons.primary-button class="mt-5">
+                            <x-buttons.primary-button type="submit" class="mt-5">
                                 {{ __('Update') }}
                             </x-buttons.primary-button>
 
