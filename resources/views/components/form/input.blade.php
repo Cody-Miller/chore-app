@@ -7,6 +7,9 @@
            name="{{ $name }}"
            id="{{ $name }}"
            type="{{$type}}"
+           @if($type == "'datetime-local'")
+               step="60"
+           @endif
             {{ $attributes(['value' => old($name, $default)]) }}
     >
     <x-form.error name="{{ $name }}" />
