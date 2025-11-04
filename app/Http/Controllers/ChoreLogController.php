@@ -32,7 +32,7 @@ class ChoreLogController extends Controller
     }
 
     public function edit($id) {
-        $choreLog = ChoreLog::where('id', $id)->first();
+        $choreLog = ChoreLog::where('id', $id)->firstOrFail();
         return view('chorelog.edit', [
             'chorelog' => $choreLog,
             'users' => User::all(),
@@ -41,7 +41,7 @@ class ChoreLogController extends Controller
     }
 
     public function update(UpdateChoreLogRequest $request, $id) {
-        $choreLog = ChoreLog::where('id', $id)->first();
+        $choreLog = ChoreLog::where('id', $id)->firstOrFail();
         $choreLog->chore_id = $request->chore_id;
         $choreLog->user_id = $request->user_id;
         $choreLog->completed_at = Carbon::parse($request->completed_time);
@@ -50,7 +50,7 @@ class ChoreLogController extends Controller
     }
 
     public function destroy($id) {
-        $choreLog = ChoreLog::where('id', $id)->first();
+        $choreLog = ChoreLog::where('id', $id)->firstOrFail();
         $choreLog->delete();
         return redirect()->route('chorelog.index'); //->with('success', 'Chore Removed!');
     }

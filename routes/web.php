@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ChoreController;
 use App\Http\Controllers\ChoreLogController;
+use App\Http\Controllers\ChoreSnoozeController;
 use App\Http\Controllers\GraphsController;
 
 require __DIR__ . '/auth.php';
@@ -47,6 +48,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('chorelog/{chorelog}/edit', [ChoreLogController::class, 'edit'])->name('chorelog.edit');
     Route::patch('chorelog/{chorelog}', [ChoreLogController::class, 'update'])->name('chorelog.update');
     Route::delete('chorelog/{chorelog}', [ChoreLogController::class, 'destroy'])->name('chorelog.destroy');
+
+    // Chore Snooze
+    Route::post('/chores/{chore}/snooze', [ChoreSnoozeController::class, 'store'])->name('chores.snooze');
+    Route::delete('/chores/{chore}/snooze', [ChoreSnoozeController::class, 'destroy'])->name('chores.unsnooze');
 
     // Chores
     Route::resource('chores', ChoreController::class);

@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 use App\Http\Requests\StoreChoreRequest;
 use App\Http\Requests\UpdateChoreRequest;
 use App\Models\Chore;
+use App\Models\User;
 
 class ChoreController extends Controller
 {
@@ -44,14 +45,14 @@ class ChoreController extends Controller
         return redirect()->route('chores.index'); //->with('success', 'Chore created successfully!');
     }
 
-    public function show($slug) {
+    public function show(Chore $chore) {
         return view('chore.show', [
-            'chore' => Chore::where('slug', $slug)->first()
+            'chore' => $chore,
+            'users' => User::select('id', 'name')->get(),
         ]);
     }
 
-    public function edit($slug) {
-        $chore = Chore::where('slug', $slug)->first();
+    public function edit(Chore $chore) {
         $choreMonth = floor($chore->occurrence_hours / 720);
         $chore->occurrence_hours -= $choreMonth * 720;
         $choreDay = floor($chore->occurrence_hours / 24);
@@ -62,8 +63,7 @@ class ChoreController extends Controller
         ]);
     }
 
-    public function update(UpdateChoreRequest $request, $slug) {
-        $chore = Chore::where('slug', $slug)->first();
+    public function update(UpdateChoreRequest $request, Chore $chore) {
         // Get our slug and see if we already have one
         $slug = Str::slug($request->name, '-');
         if (
@@ -86,8 +86,7 @@ class ChoreController extends Controller
         return redirect()->route('chores.index'); //->with('success', 'Chore update successfully!');
     }
 
-    public function destroy ($slug) {
-        $chore = Chore::where('slug', $slug)->first();
+    public function destroy (Chore $chore) {
         $chore->delete();
         return redirect()->route('chores.index'); //->with('success', 'Chore Removed!');
     }

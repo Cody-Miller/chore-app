@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Chore;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -14,11 +15,14 @@ class UpdateChoreRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Get the chore from route model binding (already resolved by Laravel)
+        $chore = $this->route('chore');
+        $choreId = $chore?->id;
+
         return [
             'name' => [
                 'required',
-                // 'unique:chores,name',
-                'unique:chores,name,'.$this->name.',name',
+                Rule::unique('chores', 'name')->ignore($choreId)->whereNull('deleted_at'),
                 'string',
                 'max:255'
             ],

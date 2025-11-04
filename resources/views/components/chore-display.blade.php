@@ -21,8 +21,13 @@
         @endif
     </span>
     @if($quick_complete)
-        <x-modal.button class="whitespace-nowrap ml-8 dark:bg-thunder-200" name="complete_chore" :slug="$chore->id">
-            Complete
-        </x-modal.button>
+        <div class="flex gap-2 ml-8 whitespace-nowrap pt-4">
+            <x-modal.button class="dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-500 focus:ring-2 focus:ring-offset-2" name="complete_chore" :slug="$chore->slug">
+                Complete
+            </x-modal.button>
+            <x-buttons.snooze-button :slug="$chore->slug">
+                Snooze
+            </x-buttons.snooze-button>
+        </div>
     @endif
 </div>

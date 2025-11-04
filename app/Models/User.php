@@ -41,4 +41,20 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Get the chore logs for the user.
+     */
+    public function choreLogs()
+    {
+        return $this->hasMany(ChoreLog::class);
+    }
+
+    /**
+     * Get the chore snoozes for the user.
+     */
+    public function snoozes()
+    {
+        return $this->hasMany(ChoreSnooze::class);
+    }
 }
