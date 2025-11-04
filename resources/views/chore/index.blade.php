@@ -30,7 +30,7 @@
                                 </x-buttons.primary-link-button>
                             </div>
 
-                            <ul>
+                            <ul class="mx-4">
                                 @foreach($chores as $chore)
                                     <li x-show="!search || '{{ strtolower($chore->name) }}'.includes(search.toLowerCase()) || '{{ strtolower($chore->description) }}'.includes(search.toLowerCase())">
                                         <x-chore-display :chore="$chore"/>

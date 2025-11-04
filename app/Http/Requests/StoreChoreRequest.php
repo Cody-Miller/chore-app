@@ -17,7 +17,7 @@ class StoreChoreRequest extends FormRequest
         return [
             'name' => [
                 'required',
-                'unique:chores,name',
+                Rule::unique('chores', 'name')->whereNull('deleted_at'),
                 'string',
                 'max:255'
             ],

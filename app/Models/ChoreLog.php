@@ -16,8 +16,6 @@ class ChoreLog extends Model
         'completed_at'
     ];
 
-    public array $dates = ['completed_at'];
-
     protected $casts = [
         'completed_at' => 'datetime',
     ];

@@ -18,9 +18,17 @@ class Chore extends Model
         'occurrence_hours'
     ];
 
-    public static function getDue()
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
     {
-        return self::select('chores.*')
+        return 'slug';
+    }
+
+    public static function getDue($userId = null)
+    {
+        $query = self::select('chores.*')
             ->leftJoin('chore_logs', function ($join) {
                 $join->on('chores.id', '=', 'chore_logs.chore_id')
                     ->whereNull('chore_logs.deleted_at');
@@ -30,13 +38,25 @@ class Chore extends Model
             ->groupBy('chores.id')
             ->havingRaw(
                 'DATE(NOW()) > DATE(DATE_ADD(MAX(chore_logs.completed_at), INTERVAL chores.occurrence_hours HOUR)) OR MAX(chore_logs.completed_at) IS NULL'
-            )
-            ->get();
+            );
+
+        // Filter out snoozed chores for the user
+        if ($userId) {
+            $query->whereNotExists(function ($q) use ($userId) {
+                $q->select(\DB::raw(1))
+                    ->from('chore_snoozes')
+                    ->whereColumn('chore_snoozes.chore_id', 'chores.id')
+                    ->where('chore_snoozes.user_id', $userId)
+                    ->where('chore_snoozes.snoozed_until', '>', now());
+            });
+        }
+
+        return $query->get();
     }
 
-    public static function getUpcoming()
+    public static function getUpcoming($userId = null)
     {
-        return self::select('chores.*')
+        $query = self::select('chores.*')
             ->leftJoin('chore_logs', function ($join) {
                 $join->on('chores.id', '=', 'chore_logs.chore_id')
                     ->whereNull('chore_logs.deleted_at');
@@ -46,13 +66,35 @@ class Chore extends Model
             ->groupBy('chores.id')
             ->havingRaw(
                 'DATE_ADD(DATE(NOW()), INTERVAL 72 HOUR) >= DATE_ADD(DATE(MAX(chore_logs.completed_at)), INTERVAL chores.occurrence_hours HOUR) AND DATE(NOW()) <= DATE_ADD(DATE(MAX(chore_logs.completed_at)), INTERVAL chores.occurrence_hours HOUR)'
-            )
-            ->get();
+            );
+
+        // Filter out snoozed chores for the user
+        if ($userId) {
+            $query->whereNotExists(function ($q) use ($userId) {
+                $q->select(\DB::raw(1))
+                    ->from('chore_snoozes')
+                    ->whereColumn('chore_snoozes.chore_id', 'chores.id')
+                    ->where('chore_snoozes.user_id', $userId)
+                    ->where('chore_snoozes.snoozed_until', '>', now());
+            });
+        }
+
+        return $query->get();
     }
 
-    public static function getOneTime()
+    public static function getOneTime($userId = null)
     {
-        return self::whereDoesntHave('choreLogs')->where('occurrence_hours', 0)->get();
+        $query = self::whereDoesntHave('choreLogs')->where('occurrence_hours', 0);
+
+        // Filter out snoozed chores for the user
+        if ($userId) {
+            $query->whereDoesntHave('snoozes', function ($q) use ($userId) {
+                $q->where('user_id', $userId)
+                    ->where('snoozed_until', '>', now());
+            });
+        }
+
+        return $query->get();
     }
 
     public function hasCompleted()
@@ -68,6 +110,33 @@ class Chore extends Model
     public function choreLogs()
     {
         return $this->hasMany(ChoreLog::class)->orderBy('completed_at', 'desc');
+    }
+
+    public function snoozes()
+    {
+        return $this->hasMany(ChoreSnooze::class);
+    }
+
+    /**
+     * Check if this chore is snoozed for a specific user.
+     */
+    public function isSnoozedForUser($userId)
+    {
+        return $this->snoozes()
+            ->where('user_id', $userId)
+            ->where('snoozed_until', '>', now())
+            ->exists();
+    }
+
+    /**
+     * Get the active snooze for a specific user.
+     */
+    public function getActiveSnoozeForUser($userId)
+    {
+        return $this->snoozes()
+            ->where('user_id', $userId)
+            ->where('snoozed_until', '>', now())
+            ->first();
     }
 
     public function getLastCompletedUser()

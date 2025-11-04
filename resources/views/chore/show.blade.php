@@ -1,5 +1,4 @@
-@php use App\Models\User; @endphp
-@props(['chore' => null])
+@props(['chore' => null, 'users' => null])
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -85,6 +84,6 @@
         </form>
     </x-modal.popup>
 
-    <x-chore-complete-modal :users="User::all()" action="/chorelog/{{ $chore->id }}"/>
+    <x-chore-complete-modal :users="$users" action="/chorelog/{{ $chore->slug }}"/>
 
 </x-app-layout>
