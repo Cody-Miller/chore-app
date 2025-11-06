@@ -15,9 +15,15 @@ class UserActionPastWeekWeighted extends Charts
         $this->chart = $chart;
     }
 
-    public function build(): BarChart
+    public function build($startDate = null, $endDate = null): BarChart
     {
-        $records = ChoreLog::getChoreLogsWeightByUsersAndWeekday(now()->startOfWeek(), now()->endOfWeek());
+        // Default to current week if no dates provided
+        if (!$startDate || !$endDate) {
+            $startDate = now()->startOfWeek();
+            $endDate = now()->endOfWeek();
+        }
+
+        $records = ChoreLog::getChoreLogsWeightByUsersAndWeekday($startDate, $endDate);
         if ($records->count() > 0) {
             $this->hasData = true;
         }
@@ -35,9 +41,10 @@ class UserActionPastWeekWeighted extends Charts
                 }
             }
         }
+        $dateRange = $startDate->format('M d') . ' - ' . $endDate->format('M d, Y');
         $chart = $this->chart->barChart()
-            ->setTitle('Current Week Weighted')
-            ->setSubtitle('Total of weight from chores completed over the current week.')
+            ->setTitle('Week Weighted')
+            ->setSubtitle("Total weight from chores completed: {$dateRange}")
             ->setXAxis(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
         foreach ($userDaysStruct as $userName => $userWeightCount) {
             $chart->addData($userName, $userWeightCount);

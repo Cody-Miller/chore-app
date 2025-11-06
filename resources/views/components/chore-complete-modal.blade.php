@@ -7,15 +7,22 @@
             Are you sure you want to Complete this chore?
         </h2>
 
-        <div x-data="{ showSelect: false }">
+        <div x-data="{ showSelect: false, showSplit: false }">
             <div class="mt-6 flex justify-between">
-                <div class="flex justify-start">
+                <div class="flex justify-start gap-2">
                     <x-buttons.tertiary-button
-                        x-on:click="showSelect = !showSelect"
-                        class="px-4 py-2 mx-2"
+                        x-on:click="showSelect = !showSelect; if(showSelect) showSplit = false"
+                        class="px-4 py-2"
                         type="button"
                     >
                         Complete For Other
+                    </x-buttons.tertiary-button>
+                    <x-buttons.tertiary-button
+                        x-on:click="showSplit = !showSplit; if(showSplit) showSelect = false"
+                        class="px-4 py-2"
+                        type="button"
+                    >
+                        Split Completion
                     </x-buttons.tertiary-button>
                 </div>
 
@@ -58,6 +65,31 @@
                         <x-form.select-input-option>NA</x-form.select-input-option>
                     @endif
                 </x-form.select-input>
+            </div>
+            <div x-show="showSplit">
+                <x-form.select-input name="split_with_user_id" :label-content="'Split 50/50 with:'">
+                    <x-form.select-input-option
+                        disabled
+                        selected
+                        value=""
+                    >
+                        {{ __('Please Select') }}
+                    </x-form.select-input-option>
+                    @if ($users && count($users) > 0)
+                        @foreach($users as $user)
+                            @if($user->id != auth()->user()->id)
+                                <x-form.select-input-option
+                                    value="{{ $user->id }}">{{ $user->name }}
+                                </x-form.select-input-option>
+                            @endif
+                        @endforeach
+                    @else
+                        <x-form.select-input-option>NA</x-form.select-input-option>
+                    @endif
+                </x-form.select-input>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    You and the selected user will each receive 50% of the weight/points for this chore.
+                </p>
             </div>
         </div>
     </form>

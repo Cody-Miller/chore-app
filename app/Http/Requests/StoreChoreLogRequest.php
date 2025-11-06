@@ -19,6 +19,12 @@ class StoreChoreLogRequest extends FormRequest
                 'integer',
                 'exists:users,id'
             ],
+            'split_with_user_id' => [
+                'nullable',
+                'integer',
+                'exists:users,id',
+                'different:' . auth()->id()
+            ],
         ];
     }
 }

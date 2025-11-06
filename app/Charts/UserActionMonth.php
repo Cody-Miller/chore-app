@@ -15,11 +15,17 @@ class UserActionMonth extends Charts
         $this->chart = $chart;
     }
 
-    public function build(): PieChart
+    public function build($startDate = null, $endDate = null): PieChart
     {
+        // Default to last 30 days if no dates provided
+        if (!$startDate || !$endDate) {
+            $startDate = now()->subMonth();
+            $endDate = now();
+        }
+
         $weights = [];
         $names = [];
-        $records = ChoreLog::getChoreLogsWeightByUsers(now()->subMonth(), now());
+        $records = ChoreLog::getChoreLogsWeightByUsers($startDate, $endDate);
         if ($records->count() > 0) {
             $this->hasData = true;
         }
@@ -28,9 +34,10 @@ class UserActionMonth extends Charts
             $weights[] = round($record->total_weight / $totalWeight * 100, 2);
             $names[] = $record->name;
         }
+        $dateRange = $startDate->format('M d') . ' - ' . $endDate->format('M d, Y');
         return $this->chart->pieChart()
-            ->setTitle('Last 30 Days')
-            ->setSubtitle('Percentage of weighted chores completed')
+            ->setTitle('User Contribution Breakdown')
+            ->setSubtitle("Percentage of weighted chores completed: {$dateRange}")
             ->addData($weights)
             ->setLabels($names);
     }

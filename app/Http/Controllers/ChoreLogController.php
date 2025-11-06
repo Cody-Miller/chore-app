@@ -9,6 +9,7 @@ use App\Models\Chore;
 use App\Models\ChoreLog;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class ChoreLogController extends Controller
 {
@@ -23,11 +24,41 @@ class ChoreLogController extends Controller
     }
 
     public function store(StoreChoreLogRequest $request, Chore $chore) {
-        ChoreLog::create([
-            'chore_id' => $chore->id,
-            'user_id' => $request->user_id ?? auth()->user()->id,
-            'completed_at' => now(),
-        ]);
+        // Check if this is a split completion
+        if ($request->has('split_with_user_id') && $request->split_with_user_id) {
+            // Generate a unique ID to link the two split records
+            $splitGroupId = Str::uuid();
+
+            // Create first log for the authenticated user
+            ChoreLog::create([
+                'chore_id' => $chore->id,
+                'user_id' => auth()->user()->id,
+                'completed_at' => now(),
+                'weight_percentage' => 50.00,
+                'split_group_id' => $splitGroupId,
+                'is_split' => true,
+            ]);
+
+            // Create second log for the selected user
+            ChoreLog::create([
+                'chore_id' => $chore->id,
+                'user_id' => $request->split_with_user_id,
+                'completed_at' => now(),
+                'weight_percentage' => 50.00,
+                'split_group_id' => $splitGroupId,
+                'is_split' => true,
+            ]);
+        } else {
+            // Regular single-user completion
+            ChoreLog::create([
+                'chore_id' => $chore->id,
+                'user_id' => $request->user_id ?? auth()->user()->id,
+                'completed_at' => now(),
+                'weight_percentage' => 100.00,
+                'is_split' => false,
+            ]);
+        }
+
         return redirect()->route('dashboard'); //->with('success', 'Chore created successfully!');
     }
 

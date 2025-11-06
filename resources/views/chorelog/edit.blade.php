@@ -15,6 +15,31 @@
                         @csrf
                         @method('PATCH')
 
+                        @if($chorelog->is_split)
+                            <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                <div class="flex items-center mb-2">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                                        Split Completion
+                                    </span>
+                                </div>
+                                @php
+                                    $partner = $chorelog->splitPartner();
+                                @endphp
+                                <p class="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                                    This completion was split 50/50 between <strong>{{ $chorelog->user?->name }}</strong>
+                                    @if($partner)
+                                        and <strong>{{ $partner->user?->name }}</strong>
+                                    @endif
+                                </p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    Each user receives {{ $chorelog->weight_percentage }}% of the weight ({{ round($chorelog->chore?->weight * ($chorelog->weight_percentage ?? 100) / 100, 1) }} points)
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                                    Note: Editing this log only affects this user's record. The split partner's record remains unchanged.
+                                </p>
+                            </div>
+                        @endif
+
                         <x-form.select-input name="user_id" :label-content="'User:'">
                             @if ($users && count($users) > 0)
                                 @foreach($users as $user)
