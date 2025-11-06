@@ -27,7 +27,7 @@ class ChoreCompletionRate extends Charts
         $completionRates = [];
 
         foreach ($records as $record) {
-            $choreNames[] = $record->name . ' (' . $record->actual_completions . '/' . $record->expected_completions . ')';
+            $choreNames[] = $record->name;
             $completionRates[] = round($record->completion_rate, 1);
         }
 
