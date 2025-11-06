@@ -13,7 +13,10 @@ class ChoreLog extends Model
     protected $fillable = [
         'chore_id',
         'user_id',
-        'completed_at'
+        'completed_at',
+        'weight_percentage',
+        'split_group_id',
+        'is_split'
     ];
 
     protected $casts = [
@@ -36,7 +39,7 @@ class ChoreLog extends Model
             ->join('chores', 'chores.id', '=', 'chore_logs.chore_id')
             ->join('users', 'users.id', '=', 'chore_logs.user_id')
             ->whereBetween('completed_at', [$startDate, $endDate])
-            ->selectRaw('users.name, SUM(chores.weight) AS total_weight')
+            ->selectRaw('users.name, SUM(chores.weight * COALESCE(chore_logs.weight_percentage, 100) / 100) AS total_weight')
             ->groupBy('users.id', 'users.name')
             ->get();
     }
@@ -47,7 +50,7 @@ class ChoreLog extends Model
             ->join('chores', 'chores.id', '=', 'chore_logs.chore_id')
             ->join('users', 'users.id', '=', 'chore_logs.user_id')
             ->whereBetween('completed_at', [$startDate, $endDate])
-            ->selectRaw('users.name, SUM(chores.weight) AS total_weight, WEEKDAY(completed_at) AS day')
+            ->selectRaw('users.name, SUM(chores.weight * COALESCE(chore_logs.weight_percentage, 100) / 100) AS total_weight, WEEKDAY(completed_at) AS day')
             ->groupByRaw('users.id, WEEKDAY(completed_at)')
             ->get();
     }
@@ -60,6 +63,21 @@ class ChoreLog extends Model
             ->selectRaw('users.name, COUNT(*) AS chore_count, WEEKDAY(completed_at) AS day')
             ->groupByRaw('users.id, WEEKDAY(completed_at)')
             ->get();
+    }
+
+    /**
+     * Get the split partner for this chore log (if it's a split completion)
+     */
+    public function splitPartner()
+    {
+        if (!$this->is_split || !$this->split_group_id) {
+            return null;
+        }
+
+        return static::where('split_group_id', $this->split_group_id)
+            ->where('id', '!=', $this->id)
+            ->with('user')
+            ->first();
     }
 
 }

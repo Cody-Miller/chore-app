@@ -17,7 +17,7 @@
                                 <x-table.head>Time</x-table.head>
                                 <x-table.head>User</x-table.head>
                                 <x-table.head>Chore</x-table.head>
-                                <x-table.head>Weight</x-table.head>
+                                <x-table.head>Weight Earned</x-table.head>
                                 <x-table.head>Edit</x-table.head>
                             </x-table.head-row>
                             <tbody>
@@ -25,11 +25,27 @@
                                 <x-table.body-row>
                                     <x-table.body-data-number>{{ $choreLog->completed_at->format('m/d/y') }}</x-table.body-data-number>
                                     <x-table.body-data-number>{{ $choreLog->completed_at->format('h:i a') }}</x-table.body-data-number>
-                                    <x-table.body-data-text>{{ $choreLog->user?->name }}</x-table.body-data-text>
+                                    <x-table.body-data-text>
+                                        {{ $choreLog->user?->name }}
+                                        @if($choreLog->is_split)
+                                            @php
+                                                $partner = $choreLog->splitPartner();
+                                            @endphp
+                                            <br>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">
+                                                (Split @if($partner)& {{ $partner->user?->name }}@endif)
+                                            </span>
+                                        @endif
+                                    </x-table.body-data-text>
                                     <x-table.body-data-text class="dark:text-indigo-500 underline">
                                         <a href="/chores/{{ $choreLog->chore?->slug }}">{{ $choreLog->chore->name }}</a>
                                     </x-table.body-data-text>
-                                    <x-table.body-data-number>{{ $choreLog->chore?->weight }}</x-table.body-data-number>
+                                    <x-table.body-data-number>
+                                        {{ round($choreLog->chore?->weight * ($choreLog->weight_percentage ?? 100) / 100, 1) }}
+                                        @if($choreLog->is_split)
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">({{ number_format($choreLog->weight_percentage, 0) }}%)</span>
+                                        @endif
+                                    </x-table.body-data-number>
                                     <x-table.body-data-text>
                                         <x-buttons.primary-link-button href="/chorelog/{{ $choreLog->id }}/edit" >Edit</x-buttons.primary-link-button>
                                     </x-table.body-data-text>
