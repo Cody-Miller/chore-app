@@ -7,6 +7,10 @@ use App\Http\Controllers\ChoreController;
 use App\Http\Controllers\ChoreLogController;
 use App\Http\Controllers\ChoreSnoozeController;
 use App\Http\Controllers\GraphsController;
+use App\Http\Controllers\PetController;
+use App\Http\Controllers\PillController;
+use App\Http\Controllers\PillLogController;
+use App\Http\Controllers\PillDashboardController;
 
 require __DIR__ . '/auth.php';
 
@@ -55,4 +59,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Chores
     Route::resource('chores', ChoreController::class);
+
+    // Pill Dashboard
+    Route::get('/pills/dashboard', [PillDashboardController::class, 'index'])->name('pills.dashboard');
+
+    // Pets
+    Route::resource('pets', PetController::class);
+
+    // Pills
+    Route::resource('pills', PillController::class);
+
+    // Pill Logs
+    Route::get('pilllogs', [PillLogController::class, 'index'])->name('pilllogs.index');
+    Route::post('/pilllogs/{pill}', [PillLogController::class, 'store'])->name('pilllogs.store');
+    Route::get('pilllogs/{pilllog}/edit', [PillLogController::class, 'edit'])->name('pilllogs.edit');
+    Route::patch('pilllogs/{pilllog}', [PillLogController::class, 'update'])->name('pilllogs.update');
+    Route::delete('pilllogs/{pilllog}', [PillLogController::class, 'destroy'])->name('pilllogs.destroy');
 });
