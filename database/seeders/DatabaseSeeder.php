@@ -16,6 +16,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Create API user first
+        $this->call([
+            ApiUserSeeder::class,
+        ]);
+
         $faker = Factory::create();
 
         $user1 = User::factory()->create([

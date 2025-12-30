@@ -23,7 +23,7 @@
 
                         <x-form.input name='birth_date' type='date'>{{ __('Birth Date (optional):') }}</x-form.input>
 
-                        <x-form.textarea name='notes'>{{ __('Notes (optional):') }}</x-form.textarea>
+                        <x-form.textarea name='notes' placeholder="{{ __('Notes (optional)') }}"></x-form.textarea>
 
                         <x-form.input name='photo' type='file' accept='image/*'>{{ __('Photo (optional):') }}</x-form.input>
 

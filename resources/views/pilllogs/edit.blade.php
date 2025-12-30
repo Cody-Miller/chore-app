@@ -60,9 +60,8 @@
                         <x-form.textarea
                             name='notes'
                             :default="$pilllog->notes"
-                        >
-                            {{ __('Notes:') }}
-                        </x-form.textarea>
+                            placeholder="{{ __('Notes') }}"
+                        ></x-form.textarea>
 
                         <div>
                             <x-buttons.primary-button type="submit" class="mt-5">

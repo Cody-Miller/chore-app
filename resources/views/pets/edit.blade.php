@@ -24,7 +24,7 @@
 
                         <x-form.input name='birth_date' type='date' :default="$pet->birth_date?->format('Y-m-d')">{{ __('Birth Date:') }}</x-form.input>
 
-                        <x-form.textarea name='notes' :default="$pet->notes">{{ __('Notes:') }}</x-form.textarea>
+                        <x-form.textarea name='notes' :default="$pet->notes" placeholder="{{ __('Notes') }}"></x-form.textarea>
 
                         @if($pet->photo_path)
                             <div class="mb-4">

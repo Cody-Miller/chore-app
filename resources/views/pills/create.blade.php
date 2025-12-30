@@ -17,12 +17,12 @@
                         @method('POST')
 
                         <x-form.select-input name="pet_id" :label-content="'Pet:'">
-                            <x-form.select-input-option disabled selected value="">
+                            <x-form.select-input-option disabled :selected="!request('pet_id')" value="">
                                 {{ __('Please Select') }}
                             </x-form.select-input-option>
                             @if ($pets && count($pets) > 0)
                                 @foreach($pets as $pet)
-                                    <x-form.select-input-option value="{{ $pet->id }}">{{ $pet->name }}</x-form.select-input-option>
+                                    <x-form.select-input-option value="{{ $pet->id }}" :selected="request('pet_id') == $pet->id">{{ $pet->name }}</x-form.select-input-option>
                                 @endforeach
                             @else
                                 <x-form.select-input-option>No pets added yet</x-form.select-input-option>
@@ -33,7 +33,7 @@
 
                         <x-form.input name='dosage' type='text'>{{ __('Dosage (e.g., 10mg, 1 tablet):') }}</x-form.input>
 
-                        <x-form.textarea name='description'>{{ __('Description/Instructions (optional):') }}</x-form.textarea>
+                        <x-form.textarea name='description' placeholder="{{ __('Description/Instructions (optional)') }}"></x-form.textarea>
 
                         <div class="mb-4">
                             <label class="block font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">

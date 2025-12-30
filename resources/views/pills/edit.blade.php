@@ -12,7 +12,7 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h3>{{ __('Edit') }} {{ $pill->name }}</h3>
 
-                    <form method="POST" action="/pills/{{ $pill->slug }}" x-data="{ times: @json($pill->scheduled_times) }">
+                    <form method="POST" action="/pills/{{ $pill->slug }}" x-data="{ times: @js($pill->scheduled_times ?? []) }">
                         @csrf
                         @method('PATCH')
 
@@ -30,7 +30,7 @@
 
                         <x-form.input name='dosage' type='text' :default="$pill->dosage">{{ __('Dosage:') }}</x-form.input>
 
-                        <x-form.textarea name='description' :default="$pill->description">{{ __('Description/Instructions:') }}</x-form.textarea>
+                        <x-form.textarea name='description' :default="$pill->description" placeholder="{{ __('Description/Instructions') }}"></x-form.textarea>
 
                         <div class="mb-4">
                             <label class="block font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
