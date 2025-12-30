@@ -1,7 +1,7 @@
-@props(['name' => null, 'slug' => null])
+@props(['name' => null, 'slug' => null, 'data' => null])
 <button
     x-data=""
-    x-on:click.prevent="$dispatch('open-modal', ['{{ $name }}', '{{ $slug }}'])"
+    x-on:click.prevent="$dispatch('open-modal', ['{{ $name }}', '{{ $slug }}', {{ $data ?? 'null' }}])"
     {{
         $attributes->merge([
             'type' => 'button',
