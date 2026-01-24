@@ -6,7 +6,7 @@
             {{ __('Chore Dashboard') }}
         </h2>
     </x-slot>
-    <div class="pb-12" x-data="{ choreId: '' }">
+    <div class="pb-12" x-data="{ choreId: '', currentTab: parseInt(new URLSearchParams(window.location.search).get('tab')) || 1 }" @tab-changed.window="currentTab = $event.detail">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="p-6 text-gray-900 dark:text-gray-100">
                 <h5>Don't be bored... Bee Chored</h5>
@@ -82,7 +82,7 @@
                         </x-tab.content>
                     </x-tab.wrapper>
 
-                    <x-chore-complete-modal :users="$users" x-bind:action="'/chorelog/' + choreId"/>
+                    <x-chore-complete-modal :users="$users" :includeTab="true" x-bind:action="'/chorelog/' + choreId"/>
 
                 </div>
             </div>
