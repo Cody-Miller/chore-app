@@ -33,6 +33,9 @@
                 {{ $slot }}
             </main>
 
+            <!-- Toast Notifications -->
+            <x-toast />
+
             @include('layouts.footer')
         </div>
     </body>

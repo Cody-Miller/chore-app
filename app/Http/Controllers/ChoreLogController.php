@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreChoreLogRequest;
-use App\Http\Requests\StoreChoreRequest;
 use App\Http\Requests\UpdateChoreLogRequest;
 use App\Models\Chore;
 use App\Models\ChoreLog;
@@ -13,17 +12,19 @@ use Illuminate\Support\Str;
 
 class ChoreLogController extends Controller
 {
-    public function index() {
+    public function index()
+    {
         return view('chorelog.index', [
             'choreLogs' => ChoreLog::latest('completed_at')
                 ->with(['chore', 'user'])
                 ->whereHas('chore', function ($chore) {
                     $chore->whereNull('deleted_at');
-                })->paginate(50)
+                })->paginate(50),
         ]);
     }
 
-    public function store(StoreChoreLogRequest $request, Chore $chore) {
+    public function store(StoreChoreLogRequest $request, Chore $chore)
+    {
         // Check if this is a split completion
         if ($request->has('split_with_user_id') && $request->split_with_user_id) {
             // Generate a unique ID to link the two split records
@@ -59,11 +60,27 @@ class ChoreLogController extends Controller
             ]);
         }
 
-        return redirect()->route('dashboard'); //->with('success', 'Chore created successfully!');
+        // Redirect back to the same page the user was on
+        $redirectTo = $request->input('redirect_to');
+        $tab = $request->input('tab');
+        $successMessage = "Chore '{$chore->name}' completed!";
+
+        if ($redirectTo) {
+            $url = $redirectTo;
+            if ($tab) {
+                $url .= (str_contains($url, '?') ? '&' : '?').'tab='.$tab;
+            }
+
+            return redirect($url)->with('success', $successMessage);
+        }
+
+        return redirect()->route('dashboard')->with('success', $successMessage);
     }
 
-    public function edit($id) {
+    public function edit($id)
+    {
         $choreLog = ChoreLog::where('id', $id)->firstOrFail();
+
         return view('chorelog.edit', [
             'chorelog' => $choreLog,
             'users' => User::all(),
@@ -71,18 +88,22 @@ class ChoreLogController extends Controller
         ]);
     }
 
-    public function update(UpdateChoreLogRequest $request, $id) {
+    public function update(UpdateChoreLogRequest $request, $id)
+    {
         $choreLog = ChoreLog::where('id', $id)->firstOrFail();
         $choreLog->chore_id = $request->chore_id;
         $choreLog->user_id = $request->user_id;
         $choreLog->completed_at = Carbon::parse($request->completed_time);
         $choreLog->update();
-        return redirect()->route('chorelog.index'); //->with('success', 'Chore update successfully!');
+
+        return redirect()->route('chorelog.index'); // ->with('success', 'Chore update successfully!');
     }
 
-    public function destroy($id) {
+    public function destroy($id)
+    {
         $choreLog = ChoreLog::where('id', $id)->firstOrFail();
         $choreLog->delete();
-        return redirect()->route('chorelog.index'); //->with('success', 'Chore Removed!');
+
+        return redirect()->route('chorelog.index'); // ->with('success', 'Chore Removed!');
     }
 }

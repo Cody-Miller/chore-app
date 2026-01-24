@@ -15,7 +15,7 @@ class Chore extends Model
         'slug',
         'description',
         'weight',
-        'occurrence_hours'
+        'occurrence_hours',
     ];
 
     /**
@@ -40,16 +40,13 @@ class Chore extends Model
                 'DATE(NOW()) > DATE(DATE_ADD(MAX(chore_logs.completed_at), INTERVAL chores.occurrence_hours HOUR)) OR MAX(chore_logs.completed_at) IS NULL'
             );
 
-        // Filter out snoozed chores for the user
-        if ($userId) {
-            $query->whereNotExists(function ($q) use ($userId) {
-                $q->select(\DB::raw(1))
-                    ->from('chore_snoozes')
-                    ->whereColumn('chore_snoozes.chore_id', 'chores.id')
-                    ->where('chore_snoozes.user_id', $userId)
-                    ->where('chore_snoozes.snoozed_until', '>', now());
-            });
-        }
+        // Filter out globally snoozed chores
+        $query->whereNotExists(function ($q) {
+            $q->select(\DB::raw(1))
+                ->from('chore_snoozes')
+                ->whereColumn('chore_snoozes.chore_id', 'chores.id')
+                ->where('chore_snoozes.snoozed_until', '>', now());
+        });
 
         return $query->get();
     }
@@ -68,38 +65,32 @@ class Chore extends Model
                 'DATE_ADD(DATE(NOW()), INTERVAL 72 HOUR) >= DATE_ADD(DATE(MAX(chore_logs.completed_at)), INTERVAL chores.occurrence_hours HOUR) AND DATE(NOW()) <= DATE_ADD(DATE(MAX(chore_logs.completed_at)), INTERVAL chores.occurrence_hours HOUR)'
             );
 
-        // Filter out snoozed chores for the user
-        if ($userId) {
-            $query->whereNotExists(function ($q) use ($userId) {
-                $q->select(\DB::raw(1))
-                    ->from('chore_snoozes')
-                    ->whereColumn('chore_snoozes.chore_id', 'chores.id')
-                    ->where('chore_snoozes.user_id', $userId)
-                    ->where('chore_snoozes.snoozed_until', '>', now());
-            });
-        }
+        // Filter out globally snoozed chores
+        $query->whereNotExists(function ($q) {
+            $q->select(\DB::raw(1))
+                ->from('chore_snoozes')
+                ->whereColumn('chore_snoozes.chore_id', 'chores.id')
+                ->where('chore_snoozes.snoozed_until', '>', now());
+        });
 
         return $query->get();
     }
 
     public static function getOneTime($userId = null)
     {
-        $query = self::whereDoesntHave('choreLogs')->where('occurrence_hours', 0);
+        $query = self::where('occurrence_hours', 0);
 
-        // Filter out snoozed chores for the user
-        if ($userId) {
-            $query->whereDoesntHave('snoozes', function ($q) use ($userId) {
-                $q->where('user_id', $userId)
-                    ->where('snoozed_until', '>', now());
-            });
-        }
+        // Filter out globally snoozed chores
+        $query->whereDoesntHave('snoozes', function ($q) {
+            $q->where('snoozed_until', '>', now());
+        });
 
         return $query->get();
     }
 
     public function hasCompleted()
     {
-        return (bool)$this->getLastChoreLog();
+        return (bool) $this->getLastChoreLog();
     }
 
     private function getLastChoreLog()

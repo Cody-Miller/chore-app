@@ -1,8 +1,12 @@
-@props(['users' => ''])
+@props(['users' => '', 'redirectTo' => null, 'includeTab' => false])
 <x-modal.popup name="complete_chore">
     <form {{ $attributes->merge(['class' => 'p-6', 'method' => 'POST']) }}>
         @csrf
         @method('POST')
+        <input type="hidden" name="redirect_to" value="{{ $redirectTo ?? url()->current() }}">
+        @if($includeTab)
+            <input type="hidden" name="tab" x-bind:value="currentTab">
+        @endif
         <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
             Are you sure you want to Complete this chore?
         </h2>
