@@ -14,6 +14,17 @@ use Illuminate\Http\Request;
 
 class GraphsController extends Controller
 {
+    private function parseDateFromRequest(Request $request, string $key, Carbon $default, bool $isEndDate = false): Carbon
+    {
+        if ($request->input($key)) {
+            $date = Carbon::parse($request->input($key));
+
+            return $isEndDate ? $date->endOfDay() : $date->startOfDay();
+        }
+
+        return $default;
+    }
+
     public function index(
         Request $request,
         UserActionPastWeek $chartWeek,
@@ -26,27 +37,15 @@ class GraphsController extends Controller
     ) {
         $return = [];
 
-        // Handle date range parameters
-        $weekStartDate = $request->input('week_start_date')
-            ? Carbon::parse($request->input('week_start_date'))->startOfDay()
-            : now()->startOfWeek();
-        $weekEndDate = $request->input('week_end_date')
-            ? Carbon::parse($request->input('week_end_date'))->endOfDay()
-            : now()->endOfWeek();
+        // Parse date range parameters
+        $weekStartDate = $this->parseDateFromRequest($request, 'week_start_date', now()->startOfWeek());
+        $weekEndDate = $this->parseDateFromRequest($request, 'week_end_date', now()->endOfWeek(), true);
 
-        $monthStartDate = $request->input('month_start_date')
-            ? Carbon::parse($request->input('month_start_date'))->startOfDay()
-            : now()->subMonth();
-        $monthEndDate = $request->input('month_end_date')
-            ? Carbon::parse($request->input('month_end_date'))->endOfDay()
-            : now();
+        $monthStartDate = $this->parseDateFromRequest($request, 'month_start_date', now()->subMonth());
+        $monthEndDate = $this->parseDateFromRequest($request, 'month_end_date', now(), true);
 
-        $pillStartDate = $request->input('pill_start_date')
-            ? Carbon::parse($request->input('pill_start_date'))->startOfDay()
-            : now()->subMonths()->startOfDay();
-        $pillEndDate = $request->input('pill_end_date')
-            ? Carbon::parse($request->input('pill_end_date'))->endOfDay()
-            : now()->subDay()->endOfDay();
+        $pillStartDate = $this->parseDateFromRequest($request, 'pill_start_date', now()->subMonths()->startOfDay());
+        $pillEndDate = $this->parseDateFromRequest($request, 'pill_end_date', now()->subDay()->endOfDay(), true);
 
         // Build week charts with custom dates
         $content = $chartWeek->build($weekStartDate, $weekEndDate);

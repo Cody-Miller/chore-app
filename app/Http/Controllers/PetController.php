@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use App\Http\Requests\StorePetRequest;
 use App\Http\Requests\UpdatePetRequest;
 use App\Models\Pet;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class PetController extends Controller
 {
     public function index()
     {
         return view('pets.index', [
-            'pets' => Pet::latest()->paginate(50)
+            'pets' => Pet::latest()->paginate(50),
         ]);
     }
 
@@ -29,8 +29,8 @@ class PetController extends Controller
         $slug = Str::slug($request->name, '-');
         if (
             Pet::where('slug', '=', $slug)
-            ->where('deleted_at', '=', null)
-            ->count() > 0
+                ->where('deleted_at', '=', null)
+                ->count() > 0
         ) {
             throw ValidationException::withMessages(['name' => 'Name is too close to another name already in use.']);
         }
@@ -44,10 +44,8 @@ class PetController extends Controller
             'notes' => $request->notes,
         ];
 
-        // Handle photo upload
-        if ($request->hasFile('photo')) {
-            $path = $request->file('photo')->store('pet_photos', 'public');
-            $data['photo_path'] = $path;
+        if ($photoPath = $this->storePhoto($request)) {
+            $data['photo_path'] = $photoPath;
         }
 
         Pet::create($data);
@@ -66,7 +64,7 @@ class PetController extends Controller
     public function edit(Pet $pet)
     {
         return view('pets.edit', [
-            'pet' => $pet
+            'pet' => $pet,
         ]);
     }
 
@@ -76,9 +74,9 @@ class PetController extends Controller
         $slug = Str::slug($request->name, '-');
         if (
             Pet::where('slug', '=', $slug)
-            ->where('id', '!=', $pet->id)
-            ->where('deleted_at', '=', null)
-            ->count() > 0
+                ->where('id', '!=', $pet->id)
+                ->where('deleted_at', '=', null)
+                ->count() > 0
         ) {
             throw ValidationException::withMessages(['name' => 'Name is too close to another name already in use.']);
         }
@@ -90,10 +88,8 @@ class PetController extends Controller
         $pet->birth_date = $request->birth_date;
         $pet->notes = $request->notes;
 
-        // Handle photo upload
-        if ($request->hasFile('photo')) {
-            $path = $request->file('photo')->store('pet_photos', 'public');
-            $pet->photo_path = $path;
+        if ($photoPath = $this->storePhoto($request)) {
+            $pet->photo_path = $photoPath;
         }
 
         $pet->save();
@@ -104,6 +100,16 @@ class PetController extends Controller
     public function destroy(Pet $pet)
     {
         $pet->delete();
+
         return redirect()->route('pets.index');
+    }
+
+    private function storePhoto(Request $request): ?string
+    {
+        if ($request->hasFile('photo')) {
+            return $request->file('photo')->store('pet_photos', 'public');
+        }
+
+        return null;
     }
 }

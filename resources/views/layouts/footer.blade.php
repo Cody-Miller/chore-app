@@ -8,7 +8,7 @@
             </a>
         </div>
         <span class="block text-sm text-gray-500 sm:text-center dark:text-gray-400">
-            2024 <a href="https://flowbite.com" target="_blank" class="hover:underline">BeChore</a>. A better means to manage our chores: Version 0.3 Beta.
+            2024 <a href="https://flowbite.com" target="_blank" class="hover:underline">BeChore</a>. A better means to manage our chores, pets, and house: Version 0.8 Beta.
         </span>
         <ul class="flex flex-wrap items-center mb-6 sm:mb-0">
             <li>
