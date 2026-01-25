@@ -1,7 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* Add this to your existing CSS file */
 
 html, body {
     height: 100%; /* Ensure the body takes the full height */

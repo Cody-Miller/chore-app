@@ -2,16 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use App\Charts\UserActionPastWeekWeighted;
-use App\Charts\UserActionPastWeek;
-use App\Charts\UserActionMonth;
-use App\Charts\UserActionYear;
 use App\Charts\ChoreCompletionFrequency;
 use App\Charts\ChoreCompletionRate;
+use App\Charts\PillMissedDoses;
+use App\Charts\UserActionMonth;
+use App\Charts\UserActionPastWeek;
+use App\Charts\UserActionPastWeekWeighted;
+use App\Charts\UserActionYear;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class GraphsController extends Controller
 {
+    private function parseDateFromRequest(Request $request, string $key, Carbon $default, bool $isEndDate = false): Carbon
+    {
+        if ($request->input($key)) {
+            $date = Carbon::parse($request->input($key));
+
+            return $isEndDate ? $date->endOfDay() : $date->startOfDay();
+        }
+
+        return $default;
+    }
+
     public function index(
         Request $request,
         UserActionPastWeek $chartWeek,
@@ -20,23 +33,19 @@ class GraphsController extends Controller
         UserActionYear $chartYear,
         ChoreCompletionFrequency $chartChoreFrequency,
         ChoreCompletionRate $chartChoreRate,
+        PillMissedDoses $chartPillMissedDoses,
     ) {
         $return = [];
 
-        // Handle date range parameters
-        $weekStartDate = $request->input('week_start_date')
-            ? \Carbon\Carbon::parse($request->input('week_start_date'))->startOfDay()
-            : now()->startOfWeek();
-        $weekEndDate = $request->input('week_end_date')
-            ? \Carbon\Carbon::parse($request->input('week_end_date'))->endOfDay()
-            : now()->endOfWeek();
+        // Parse date range parameters
+        $weekStartDate = $this->parseDateFromRequest($request, 'week_start_date', now()->startOfWeek());
+        $weekEndDate = $this->parseDateFromRequest($request, 'week_end_date', now()->endOfWeek(), true);
 
-        $monthStartDate = $request->input('month_start_date')
-            ? \Carbon\Carbon::parse($request->input('month_start_date'))->startOfDay()
-            : now()->subMonth();
-        $monthEndDate = $request->input('month_end_date')
-            ? \Carbon\Carbon::parse($request->input('month_end_date'))->endOfDay()
-            : now();
+        $monthStartDate = $this->parseDateFromRequest($request, 'month_start_date', now()->subMonth());
+        $monthEndDate = $this->parseDateFromRequest($request, 'month_end_date', now(), true);
+
+        $pillStartDate = $this->parseDateFromRequest($request, 'pill_start_date', now()->subMonths()->startOfDay());
+        $pillEndDate = $this->parseDateFromRequest($request, 'pill_end_date', now()->subDay()->endOfDay(), true);
 
         // Build week charts with custom dates
         $content = $chartWeek->build($weekStartDate, $weekEndDate);
@@ -72,11 +81,19 @@ class GraphsController extends Controller
             $return['chartChoreRate'] = $content;
         }
 
+        // Build pill missed doses chart
+        $content = $chartPillMissedDoses->build($pillStartDate, $pillEndDate);
+        if ($chartPillMissedDoses->hasData()) {
+            $return['chartPillMissedDoses'] = $content;
+        }
+
         // Pass date values back to view for form
         $return['weekStartDate'] = $weekStartDate->format('Y-m-d');
         $return['weekEndDate'] = $weekEndDate->format('Y-m-d');
         $return['monthStartDate'] = $monthStartDate->format('Y-m-d');
         $return['monthEndDate'] = $monthEndDate->format('Y-m-d');
+        $return['pillStartDate'] = $pillStartDate->format('Y-m-d');
+        $return['pillEndDate'] = $pillEndDate->format('Y-m-d');
 
         return view('graphs.index', $return);
     }

@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\Chore;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Action>
@@ -21,7 +21,7 @@ class ChoreLogFactory extends Factory
         return [
             'chore_id' => Chore::factory(),
             'user_id' => User::factory(),
-            'completed_at' => $this->faker->dateTimeBetween('-10 month', '+0 day')->format('Y-m-d H:m:s')
+            'completed_at' => $this->faker->dateTimeBetween('-10 month', '+0 day')->format('Y-m-d H:i:s'),
         ];
     }
 }

@@ -77,33 +77,29 @@ class ChoreLogController extends Controller
         return redirect()->route('dashboard')->with('success', $successMessage);
     }
 
-    public function edit($id)
+    public function edit(ChoreLog $chorelog)
     {
-        $choreLog = ChoreLog::where('id', $id)->firstOrFail();
-
         return view('chorelog.edit', [
-            'chorelog' => $choreLog,
+            'chorelog' => $chorelog,
             'users' => User::all(),
             'chores' => Chore::all(),
         ]);
     }
 
-    public function update(UpdateChoreLogRequest $request, $id)
+    public function update(UpdateChoreLogRequest $request, ChoreLog $chorelog)
     {
-        $choreLog = ChoreLog::where('id', $id)->firstOrFail();
-        $choreLog->chore_id = $request->chore_id;
-        $choreLog->user_id = $request->user_id;
-        $choreLog->completed_at = Carbon::parse($request->completed_time);
-        $choreLog->update();
+        $chorelog->chore_id = $request->chore_id;
+        $chorelog->user_id = $request->user_id;
+        $chorelog->completed_at = Carbon::parse($request->completed_time);
+        $chorelog->save();
 
-        return redirect()->route('chorelog.index'); // ->with('success', 'Chore update successfully!');
+        return redirect()->route('chorelog.index');
     }
 
-    public function destroy($id)
+    public function destroy(ChoreLog $chorelog)
     {
-        $choreLog = ChoreLog::where('id', $id)->firstOrFail();
-        $choreLog->delete();
+        $chorelog->delete();
 
-        return redirect()->route('chorelog.index'); // ->with('success', 'Chore Removed!');
+        return redirect()->route('chorelog.index');
     }
 }
