@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasEffectiveDate;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Pill extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasEffectiveDate, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'pet_id',
@@ -54,26 +55,29 @@ class Pill extends Model
     {
         $now = now();
         $currentTime = $now->format('H:i');
-        $currentDate = $now->toDateString();
+        $effectiveDayStart = static::getEffectiveDayStart();
+        $effectiveDayEnd = static::getEffectiveDayEnd();
 
         return static::whereNull('deleted_at')
             ->with('pet')
             ->get()
-            ->filter(function ($pill) use ($currentTime, $currentDate) {
+            ->filter(function ($pill) use ($currentTime, $effectiveDayStart, $effectiveDayEnd) {
                 // Check if any scheduled time has passed today
                 foreach ($pill->scheduled_times as $scheduledTime) {
                     if ($scheduledTime <= $currentTime) {
-                        // Check if this dose was already given today
+                        // Check if this dose was already given during the effective day
                         $givenToday = $pill->pillLogs()
-                            ->whereDate('administered_at', $currentDate)
+                            ->where('administered_at', '>=', $effectiveDayStart)
+                            ->where('administered_at', '<=', $effectiveDayEnd)
                             ->where('scheduled_time', $scheduledTime)
                             ->exists();
 
-                        if (!$givenToday) {
+                        if (! $givenToday) {
                             return true; // Due now
                         }
                     }
                 }
+
                 return false;
             });
     }
@@ -85,24 +89,27 @@ class Pill extends Model
     {
         $now = now();
         $currentTime = $now->format('H:i');
-        $currentDate = $now->toDateString();
+        $effectiveDayStart = static::getEffectiveDayStart();
+        $effectiveDayEnd = static::getEffectiveDayEnd();
 
         return static::whereNull('deleted_at')
             ->with('pet')
             ->get()
-            ->filter(function ($pill) use ($currentTime, $currentDate) {
+            ->filter(function ($pill) use ($currentTime, $effectiveDayStart, $effectiveDayEnd) {
                 foreach ($pill->scheduled_times as $scheduledTime) {
                     if ($scheduledTime > $currentTime) {
                         $givenToday = $pill->pillLogs()
-                            ->whereDate('administered_at', $currentDate)
+                            ->where('administered_at', '>=', $effectiveDayStart)
+                            ->where('administered_at', '<=', $effectiveDayEnd)
                             ->where('scheduled_time', $scheduledTime)
                             ->exists();
 
-                        if (!$givenToday) {
+                        if (! $givenToday) {
                             return true; // Upcoming
                         }
                     }
                 }
+
                 return false;
             });
     }
@@ -112,12 +119,14 @@ class Pill extends Model
      */
     public static function getCompletedToday()
     {
-        $currentDate = now()->toDateString();
+        $effectiveDayStart = static::getEffectiveDayStart();
+        $effectiveDayEnd = static::getEffectiveDayEnd();
 
         return static::whereNull('deleted_at')
             ->with('pet')
-            ->whereHas('pillLogs', function ($query) use ($currentDate) {
-                $query->whereDate('administered_at', $currentDate);
+            ->whereHas('pillLogs', function ($query) use ($effectiveDayStart, $effectiveDayEnd) {
+                $query->where('administered_at', '>=', $effectiveDayStart)
+                    ->where('administered_at', '<=', $effectiveDayEnd);
             })
             ->get();
     }
@@ -133,6 +142,7 @@ class Pill extends Model
                 return $time;
             }
         }
+
         return $this->scheduled_times[0] ?? null; // Tomorrow's first dose
     }
 
@@ -141,8 +151,12 @@ class Pill extends Model
      */
     public function hasBeenGivenToday()
     {
+        $effectiveDayStart = static::getEffectiveDayStart();
+        $effectiveDayEnd = static::getEffectiveDayEnd();
+
         return $this->pillLogs()
-            ->whereDate('administered_at', now())
+            ->where('administered_at', '>=', $effectiveDayStart)
+            ->where('administered_at', '<=', $effectiveDayEnd)
             ->exists();
     }
 
@@ -151,8 +165,12 @@ class Pill extends Model
      */
     public function getTodaysCompletedDoses()
     {
+        $effectiveDayStart = static::getEffectiveDayStart();
+        $effectiveDayEnd = static::getEffectiveDayEnd();
+
         return $this->pillLogs()
-            ->whereDate('administered_at', now())
+            ->where('administered_at', '>=', $effectiveDayStart)
+            ->where('administered_at', '<=', $effectiveDayEnd)
             ->pluck('scheduled_time')
             ->toArray();
     }

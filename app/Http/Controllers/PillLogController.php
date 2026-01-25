@@ -18,7 +18,7 @@ class PillLogController extends Controller
                 ->with(['pill.pet', 'user'])
                 ->whereHas('pill', function ($pill) {
                     $pill->whereNull('deleted_at');
-                })->paginate(50)
+                })->paginate(50),
         ]);
     }
 
@@ -38,6 +38,7 @@ class PillLogController extends Controller
     public function edit($id)
     {
         $pillLog = PillLog::where('id', $id)->firstOrFail();
+
         return view('pilllogs.edit', [
             'pilllog' => $pillLog,
             'users' => User::all(),
@@ -54,6 +55,7 @@ class PillLogController extends Controller
         $pillLog->scheduled_time = $request->scheduled_time;
         $pillLog->notes = $request->notes;
         $pillLog->update();
+
         return redirect()->route('pilllogs.index');
     }
 
@@ -61,6 +63,7 @@ class PillLogController extends Controller
     {
         $pillLog = PillLog::where('id', $id)->firstOrFail();
         $pillLog->delete();
+
         return redirect()->route('pilllogs.index');
     }
 }
