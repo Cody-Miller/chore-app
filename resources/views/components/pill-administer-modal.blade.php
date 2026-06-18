@@ -12,33 +12,14 @@
 
         <div x-data="{ showSelect: false }">
 
-            <div class="mt-6 flex justify-between">
-                <div class="flex justify-start gap-2">
-                    <x-buttons.tertiary-button
-                        x-on:click="showSelect = !showSelect"
-                        class="px-4 py-2"
-                        type="button"
-                    >
-                        Given By Other
-                    </x-buttons.tertiary-button>
-                </div>
-
-                <div class="flex justify-end flex-wrap gap-y-2">
-                    <x-buttons.secondary-button
-                        class="px-4 py-2 mx-2 flex-1"
-                        x-on:click="$dispatch('close')"
-                    >
-                        Cancel
-                    </x-buttons.secondary-button>
-
-                    <x-buttons.primary-button
-                        class="px-4 py-2 mx-2 flex-1"
-                        type="submit"
-                        autofocus
-                    >
-                        Mark as Given
-                    </x-buttons.primary-button>
-                </div>
+            <div class="mt-6 flex flex-col sm:flex-row gap-2">
+                <x-buttons.tertiary-button
+                    x-on:click="showSelect = !showSelect"
+                    class="w-full sm:w-auto px-4 py-2"
+                    type="button"
+                >
+                    Given By Other
+                </x-buttons.tertiary-button>
             </div>
 
             <div x-show="showSelect">
@@ -66,6 +47,23 @@
 
             <div class="mt-4">
                 <x-form.textarea name="notes" :label-content="'Notes (optional):'" placeholder="e.g., gave with food, pet resisted, etc."></x-form.textarea>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:justify-end gap-2">
+                <x-buttons.secondary-button
+                    class="w-full sm:w-auto px-4 py-2"
+                    x-on:click="$dispatch('close')"
+                >
+                    Cancel
+                </x-buttons.secondary-button>
+
+                <x-buttons.primary-button
+                    class="w-full sm:w-auto px-4 py-2"
+                    type="submit"
+                    autofocus
+                >
+                    Mark as Given
+                </x-buttons.primary-button>
             </div>
         </div>
     </form>

@@ -74,14 +74,14 @@
                             {{ __('Completed Time:') }}
                         </x-form.input>
 
-                        <div>
-                            <x-buttons.primary-button type="submit" class="mt-5">
-                                {{ __('Update') }}
-                            </x-buttons.primary-button>
-
-                            <x-modal.button name="deletechorelog">
+                        <div class="mt-5 flex flex-col sm:flex-row sm:justify-between gap-3">
+                            <x-modal.button name="deletechorelog" class="w-full sm:w-auto">
                                 {{ __('Delete') }}
                             </x-modal.button>
+
+                            <x-buttons.primary-button type="submit" class="w-full sm:w-auto">
+                                {{ __('Update') }}
+                            </x-buttons.primary-button>
                         </div>
                     </form>
 
@@ -93,18 +93,7 @@
                                 Are you sure you want to this completion?
                             </h2>
 
-                            <div class="mt-6 flex justify-end">
-                                <button type="button"
-                                        class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-25 transition ease-in-out duration-150"
-                                        x-on:click="$dispatch('close')">
-                                    Cancel
-                                </button>
-
-                                <button type="submit"
-                                        class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150 ml-3">
-                                    Delete Completion
-                                </button>
-                            </div>
+                            <x-modal.confirm-actions confirmText="Delete Completion" />
                         </form>
                     </x-modal.popup>
                 </div>

@@ -70,7 +70,7 @@
 
                             </div>
                         </div>
-                        <x-buttons.primary-button type="submit" class="mt-5">
+                        <x-buttons.primary-button type="submit" class="mt-5 w-full sm:w-auto">
                             {{ __('Create') }}
                         </x-buttons.primary-button>
                     </form>

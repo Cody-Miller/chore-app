@@ -28,14 +28,14 @@
                             @endforeach
                         </p>
 
-                        <div class="flex gap-2 mt-4 flex-wrap">
-                            <x-buttons.primary-link-button href="/pills/{{ $pill->slug }}/edit">
+                        <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 mt-4">
+                            <x-buttons.primary-link-button href="/pills/{{ $pill->slug }}/edit" class="w-full sm:w-auto">
                                 Edit Medication
                             </x-buttons.primary-link-button>
                             @foreach($pill->scheduled_times as $time)
                                 @if(!$pill->hasBeenGivenAt($time))
                                     <x-modal.button
-                                        class="dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-500 focus:ring-2 focus:ring-offset-2"
+                                        class="w-full sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-500 focus:ring-2 focus:ring-offset-2"
                                         name="administer_pill"
                                         :slug="$pill->slug"
                                         :data="json_encode(['scheduledTime' => $time])"
