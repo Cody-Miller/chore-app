@@ -43,12 +43,12 @@
                 <x-form.input-error :messages="$errors->userDeletion->get('password')" class="mt-2" />
             </div>
 
-            <div class="mt-6 flex justify-end">
-                <x-buttons.secondary-button x-on:click="$dispatch('close')">
+            <div class="mt-6 flex flex-col sm:flex-row sm:justify-end gap-3">
+                <x-buttons.secondary-button x-on:click="$dispatch('close')" class="w-full sm:w-auto">
                     {{ __('Cancel') }}
                 </x-buttons.secondary-button>
 
-                <x-buttons.danger-button type="submit" class="ml-3">
+                <x-buttons.danger-button type="submit" class="w-full sm:w-auto">
                     {{ __('Delete Account') }}
                 </x-buttons.danger-button>
             </div>

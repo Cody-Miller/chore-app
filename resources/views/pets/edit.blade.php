@@ -35,19 +35,18 @@
 
                         <x-form.input name='photo' type='file' accept='image/*'>{{ __('Change Photo (optional):') }}</x-form.input>
 
-                        <div class="flex gap-2 mt-6">
-                            <x-buttons.primary-button type="submit">{{ __('Update Pet') }}</x-buttons.primary-button>
-                            <a href="/pets" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-25 transition ease-in-out duration-150">
-                                {{ __('Cancel') }}
-                            </a>
+                        <div class="flex flex-col sm:flex-row sm:justify-between gap-3 mt-6">
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <a href="/pets" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-25 transition ease-in-out duration-150">
+                                    {{ __('Cancel') }}
+                                </a>
+                                <x-modal.button name="deletepet" class="w-full sm:w-auto">
+                                    {{ __('Delete Pet') }}
+                                </x-modal.button>
+                            </div>
+                            <x-buttons.primary-button type="submit" class="w-full sm:w-auto">{{ __('Update Pet') }}</x-buttons.primary-button>
                         </div>
                     </form>
-
-                    <div class="mt-8">
-                        <x-modal.button name="deletepet">
-                            {{ __('Delete Pet') }}
-                        </x-modal.button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -60,18 +59,7 @@
                     Are you sure you want to delete this pet?
                 </h2>
 
-                <div class="mt-6 flex justify-end">
-                    <button type="button"
-                            class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-25 transition ease-in-out duration-150"
-                            x-on:click="$dispatch('close')">
-                        Cancel
-                    </button>
-
-                    <button type="submit"
-                            class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150 ml-3">
-                        Delete Pet
-                    </button>
-                </div>
+                <x-modal.confirm-actions confirmText="Delete Pet" />
             </form>
         </x-modal.popup>
     </div>

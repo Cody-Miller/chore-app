@@ -17,7 +17,7 @@
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <x-buttons.primary-button type="submit">
+            <x-buttons.primary-button type="submit" class="w-full sm:w-auto">
                 {{ __('Email Password Reset Link') }}
             </x-buttons.primary-button>
         </div>

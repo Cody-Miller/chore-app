@@ -9,12 +9,12 @@
         </div>
     @endif
 
-    <div class="mt-4 flex items-center justify-between">
+    <div class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <form method="POST" action="{{ route('verification.send') }}">
             @csrf
 
             <div>
-                <x-buttons.primary-button type="submit">
+                <x-buttons.primary-button type="submit" class="w-full sm:w-auto">
                     {{ __('Resend Verification Email') }}
                 </x-buttons.primary-button>
             </div>

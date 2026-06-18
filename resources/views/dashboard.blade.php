@@ -59,7 +59,7 @@
                         <x-tab.content tabNumber="4">
                             @if($snoozed_chores && count($snoozed_chores))
                                 @foreach($snoozed_chores as $snoozed_chore)
-                                    <div class="py-4 flex items-center justify-between md:flex-nowrap flex-wrap">
+                                    <div class="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                         <span class="block">
                                             <a class="text-lg font-bold dark:text-indigo-500 block mb-1" href="/chores/{{ $snoozed_chore->slug }}">
                                                 {{ $snoozed_chore->name }}
@@ -67,10 +67,10 @@
                                             <span class="block whitespace-wrap px-1">{{ $snoozed_chore->description }}</span>
                                             <span class="px-1"><span class="font-semibold">Snoozed until:</span> {{ \Carbon\Carbon::parse($snoozed_chore->snoozed_until)->format('m/d/y h:i a') }}</span>
                                         </span>
-                                        <form method="POST" action="{{ route('chores.unsnooze', $snoozed_chore->slug) }}" class="ml-8">
+                                        <form method="POST" action="{{ route('chores.unsnooze', $snoozed_chore->slug) }}" class="sm:ml-8">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 dark:bg-red-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                                            <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-red-600 dark:bg-red-700 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
                                                 Unsnooze
                                             </button>
                                         </form>

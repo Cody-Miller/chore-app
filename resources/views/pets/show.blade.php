@@ -33,11 +33,11 @@
                                 <p class="mt-2"><span class="font-semibold">Notes:</span> {{ $pet->notes }}</p>
                             @endif
 
-                            <div class="flex gap-2 mt-4">
-                                <x-buttons.primary-link-button href="/pets/{{ $pet->slug }}/edit">
+                            <div class="flex flex-col sm:flex-row gap-2 mt-4">
+                                <x-buttons.primary-link-button href="/pets/{{ $pet->slug }}/edit" class="w-full sm:w-auto">
                                     Edit Pet
                                 </x-buttons.primary-link-button>
-                                <x-buttons.primary-link-button href="/pills/create?pet_id={{ $pet->id }}">
+                                <x-buttons.primary-link-button href="/pills/create?pet_id={{ $pet->id }}" class="w-full sm:w-auto">
                                     Add Pill
                                 </x-buttons.primary-link-button>
                             </div>

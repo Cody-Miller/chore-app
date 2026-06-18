@@ -1,5 +1,5 @@
 @props(['pill' => null, 'quick_administer' => false])
-<div class="py-4 flex items-center justify-between md:flex-nowrap flex-wrap">
+<div class="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <span class="block">
         <a class="text-lg font-bold dark:text-indigo-500 block mb-1" href="/pills/{{ $pill->slug }}">
             {{ $pill->name }}
@@ -22,11 +22,11 @@
         @endif
     </span>
     @if($quick_administer)
-        <div class="flex gap-2 ml-8 whitespace-nowrap pt-4 flex-wrap">
+        <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:ml-8 sm:whitespace-nowrap">
             @foreach($pill->scheduled_times as $time)
                 @if(!$pill->hasBeenGivenAt($time))
                     <x-modal.button
-                        class="dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-500 focus:ring-2 focus:ring-offset-2"
+                        class="w-full sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-500 focus:ring-2 focus:ring-offset-2"
                         name="administer_pill"
                         :slug="$pill->slug"
                         :data="json_encode(['scheduledTime' => $time])"
