@@ -47,7 +47,7 @@ class UserActionPastWeekWeighted extends Charts
             ->setSubtitle("Total weight from chores completed: {$dateRange}")
             ->setXAxis(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
         foreach ($userDaysStruct as $userName => $userWeightCount) {
-            $chart->addData($userName, $userWeightCount);
+            $chart->addData($userWeightCount, $userName);
         }
         return $chart;
     }

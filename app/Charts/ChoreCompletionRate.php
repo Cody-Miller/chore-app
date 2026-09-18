@@ -35,7 +35,7 @@ class ChoreCompletionRate extends Charts
             ->setTitle('Chores Behind Schedule')
             ->setSubtitle('Top 10 recurring chores with lowest completion rate vs expected frequency. (actual/expected)')
             ->setXAxis($choreNames)
-            ->addData('Completion Rate (%)', $completionRates)
+            ->addData($completionRates, 'Completion Rate (%)')
             ->setColors(['#FF6B6B'])
             ->setGrid(true);
     }

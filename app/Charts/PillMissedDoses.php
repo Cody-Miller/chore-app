@@ -68,7 +68,7 @@ class PillMissedDoses extends Charts
             ->setXAxis($dateLabels);
 
         foreach ($pillDatesStruct as $pillName => $missedCounts) {
-            $chart->addData($pillName, array_values($missedCounts));
+            $chart->addData(array_values($missedCounts), $pillName);
         }
 
         return $chart;
