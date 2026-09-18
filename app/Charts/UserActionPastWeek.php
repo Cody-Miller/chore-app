@@ -47,7 +47,7 @@ class UserActionPastWeek extends Charts
             ->setSubtitle("Number of chores completed: {$dateRange}")
             ->setXAxis(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
         foreach ($userDaysStruct as $userName => $userChoreCount) {
-            $chart->addData($userName, $userChoreCount);
+            $chart->addData($userChoreCount, $userName);
         }
         return $chart;
     }

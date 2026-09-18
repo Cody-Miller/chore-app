@@ -35,6 +35,6 @@ class ChoreCompletionFrequency extends Charts
             ->setTitle('Most Frequently Completed Chores')
             ->setSubtitle('Top 10 chores by number of completions in the selected period.')
             ->setXAxis($choreNames)
-            ->addData('Completions', $completionCounts);
+            ->addData($completionCounts, 'Completions');
     }
 }
