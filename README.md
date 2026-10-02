@@ -1,66 +1,97 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# BeChore
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A self-hosted Laravel app for tracking household chores (and pet medication schedules) between people who don't work the same hours. Chores are weighted so effort is comparable across different tasks, completions are logged with a timestamp, and overdue/snoozed chores surface automatically based on how often they recur.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Chores** — create recurring chores with a name, description, weight, and recurrence interval (in hours).
+- **Chore logging** — log completions, edit/delete past logs, and see who did what and when.
+- **Snoozing** — temporarily snooze a chore so it drops off the due list without logging a completion (`App\Http\Controllers\ChoreSnoozeController`).
+- **Graphs** — visual breakdowns of completions and missed chores over time, built with [LarapexCharts](https://github.com/ArielMejiaDev/larapex-charts).
+- **Pet & pill tracking** — manage pets and their medication schedules, log doses, and view an at-a-glance pill dashboard.
+- **API tokens** — issue personal access tokens (Laravel Sanctum) for scripting against the app's API.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tech stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.3+ / Laravel 12
+- Blade + [Laravel Breeze](https://laravel.com/docs/starter-kits#breeze-and-inertia) for auth scaffolding
+- Tailwind CSS + Alpine.js, bundled with Vite
+- MySQL
+- [Laravel Sail](https://laravel.com/docs/sail) for local Docker development
 
-## Learning Laravel
+## Getting started
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Prerequisites
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- Docker Desktop (or Docker Engine + Compose)
+- Composer (only needed once, to install dependencies before Sail exists — see below)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 1. Clone and install dependencies
 
-## Laravel Sponsors
+Sail itself ships as a Composer dependency, so you need Composer available once to bootstrap it. The easiest way is to run Composer inside a throwaway container:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+```bash
+git clone <repo-url> chore-app
+cd chore-app
 
-### Premium Partners
+docker run --rm \
+    -u "$(id -u):$(id -g)" \
+    -v "$(pwd):/var/www/html" \
+    -w /var/www/html \
+    laravelsail/php84-composer:latest \
+    composer install --ignore-platform-reqs
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+If you already have PHP + Composer installed locally, you can just run `composer install` instead.
 
-## Contributing
+### 2. Configure the environment
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+cp .env.example .env
+```
 
-## Code of Conduct
+The defaults target a database host named `chore-app-mysql-1` (the Sail-generated container name — based on the project directory). Adjust `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` as desired; Sail will provision the MySQL container to match whatever you put here.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 3. Start the stack with Sail
 
-## Security Vulnerabilities
+```bash
+./sail up -d
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+This brings up the app container plus MySQL, Redis, Meilisearch, Mailpit, and Selenium. Consider adding a shell alias so you don't have to type `./sail` every time:
+
+```bash
+alias sail='sh $([ -f sail ] && echo sail || echo vendor/bin/sail)'
+```
+
+### 4. Finish the install
+
+```bash
+./sail artisan key:generate
+./sail artisan migrate --seed
+./sail npm install
+./sail npm run dev   # or: ./sail npm run build
+```
+
+The app is now available at `http://localhost` (or whatever `APP_PORT` you set in `.env`).
+
+### Running tests
+
+```bash
+./sail artisan test
+```
+
+### Everyday commands
+
+| Command | Purpose |
+| --- | --- |
+| `./sail up -d` | Start all containers in the background |
+| `./sail down` | Stop all containers |
+| `./sail artisan ...` | Run an Artisan command inside the app container |
+| `./sail composer ...` | Run Composer inside the app container |
+| `./sail npm run dev` | Start the Vite dev server with hot reload |
+| `./sail mysql` | Open a MySQL shell against the app's database |
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

@@ -20,6 +20,7 @@ class ChoreSnoozeController extends Controller
 
         $chore = Chore::where('slug', $slug)->firstOrFail();
         $user = Auth::user();
+        $hours = $request->integer('hours');
 
         // Delete any existing snoozes for this chore (global snooze)
         ChoreSnooze::where('chore_id', $chore->id)->delete();
@@ -28,10 +29,10 @@ class ChoreSnoozeController extends Controller
         ChoreSnooze::create([
             'chore_id' => $chore->id,
             'user_id' => $user->id,
-            'snoozed_until' => now()->addHours($request->hours),
+            'snoozed_until' => now()->addHours($hours),
         ]);
 
-        return redirect()->back()->with('success', "Chore '{$chore->name}' snoozed for {$request->hours} hour(s).");
+        return redirect()->back()->with('success', "Chore '{$chore->name}' snoozed for {$hours} hour(s).");
     }
 
     /**
