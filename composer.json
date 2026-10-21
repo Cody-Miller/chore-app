@@ -57,7 +57,7 @@
     },
     "config": {
         "platform": {
-            "php": "8.4.25"
+            "php": "8.5.4"
         },
         "optimize-autoloader": true,
         "preferred-install": "dist",
