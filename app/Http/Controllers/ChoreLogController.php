@@ -25,6 +25,9 @@ class ChoreLogController extends Controller
 
     public function store(StoreChoreLogRequest $request, Chore $chore)
     {
+        // Only single completions get an edit link; editing one half of a split leaves its partner unchanged
+        $editUrl = null;
+
         // Check if this is a split completion
         if ($request->has('split_with_user_id') && $request->split_with_user_id) {
             // Generate a unique ID to link the two split records
@@ -51,13 +54,14 @@ class ChoreLogController extends Controller
             ]);
         } else {
             // Regular single-user completion
-            ChoreLog::create([
+            $choreLog = ChoreLog::create([
                 'chore_id' => $chore->id,
                 'user_id' => $request->user_id ?? auth()->user()->id,
                 'completed_at' => now(),
                 'weight_percentage' => 100.00,
                 'is_split' => false,
             ]);
+            $editUrl = route('chorelog.edit', $choreLog);
         }
 
         // Redirect back to the same page the user was on
@@ -77,12 +81,14 @@ class ChoreLogController extends Controller
 
             return redirect($url)
                 ->with('success', $successMessage)
-                ->with('success_action_url', route('chores.show', $chore));
+                ->with('success_action_url', route('chores.show', $chore))
+                ->with('success_edit_url', $editUrl);
         }
 
         return redirect()->route('dashboard')
             ->with('success', $successMessage)
-            ->with('success_action_url', route('chores.show', $chore));
+            ->with('success_action_url', route('chores.show', $chore))
+            ->with('success_edit_url', $editUrl);
     }
 
     public function edit(ChoreLog $chorelog)

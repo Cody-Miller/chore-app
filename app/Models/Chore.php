@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasTags;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Chore extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasTags, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -121,11 +122,6 @@ class Chore extends Model
     public function snoozes()
     {
         return $this->hasMany(ChoreSnooze::class);
-    }
-
-    public function tags()
-    {
-        return $this->belongsToMany(Tag::class)->orderBy('name');
     }
 
     public function assignedUser()

@@ -24,6 +24,7 @@ class Tag extends Model
     ];
 
     protected $fillable = [
+        'type',
         'name',
         'color',
     ];
@@ -31,7 +32,8 @@ class Tag extends Model
     protected static function booted()
     {
         static::creating(function (Tag $tag) {
-            $tag->color ??= self::nextColor();
+            $tag->type ??= 'chore';
+            $tag->color ??= self::nextColor($tag->type);
         });
     }
 
@@ -40,26 +42,47 @@ class Tag extends Model
         return $this->belongsToMany(Chore::class);
     }
 
+    public function pills()
+    {
+        return $this->belongsToMany(Pill::class);
+    }
+
     /**
-     * Find tags by name (case-insensitive), creating any that don't exist yet.
+     * Limit to tags of one type ("chore" or "pill").
      */
-    public static function findOrCreateByNames(array $names): Collection
+    public function scopeOfType($query, string $type)
+    {
+        return $query->where('type', $type);
+    }
+
+    /**
+     * Link to the list this tag belongs to, filtered by the tag.
+     */
+    public function filterUrl(): string
+    {
+        return route($this->type === 'pill' ? 'pills.index' : 'chores.index', ['tag' => $this->name]);
+    }
+
+    /**
+     * Find tags of a type by name (case-insensitive), creating any that don't exist yet.
+     */
+    public static function findOrCreateByNames(array $names, string $type): Collection
     {
         return collect($names)
             ->map(fn ($name) => trim((string) $name))
             ->filter()
             ->unique(fn ($name) => mb_strtolower($name))
-            ->map(fn ($name) => self::firstOrCreate(['name' => $name]))
+            ->map(fn ($name) => self::firstOrCreate(['type' => $type, 'name' => $name]))
             ->values();
     }
 
     /**
-     * The palette color used by the fewest tags, so tags stay visually distinct.
+     * The palette color used by the fewest tags of a type, so tags stay visually distinct.
      * Ties go to the earliest color in the palette.
      */
-    public static function nextColor(): string
+    public static function nextColor(string $type): string
     {
-        $counts = self::pluck('color')->map(fn ($color) => strtolower($color))->countBy();
+        $counts = self::ofType($type)->pluck('color')->map(fn ($color) => strtolower($color))->countBy();
 
         return collect(self::PALETTE)
             ->sortBy(fn ($color, $index) => ($counts[$color] ?? 0) * count(self::PALETTE) + $index)

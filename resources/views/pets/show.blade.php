@@ -64,6 +64,7 @@
                                     @if($pill->getLastLog())
                                         <p class="text-sm text-gray-600 dark:text-gray-400">Last given: {{ $pill->getLastAdministeredDate()->format('m/d/y h:i a') }}</p>
                                     @endif
+                                    <x-tag-list :tags="$pill->tags" class="mt-1"/>
                                 </li>
                             @endforeach
                         </ul>

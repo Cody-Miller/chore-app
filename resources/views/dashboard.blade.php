@@ -74,15 +74,9 @@
                                             <a class="text-lg font-bold dark:text-indigo-500 block mb-1" href="/chores/{{ $snoozed_chore->slug }}">
                                                 {{ $snoozed_chore->name }}
                                             </a>
-                                            @if($snoozed_chore->tags->isNotEmpty())
-                                                <span class="flex flex-wrap gap-1 mb-1 px-1">
-                                                    @foreach($snoozed_chore->tags as $tag)
-                                                        <x-tag-badge :tag="$tag"/>
-                                                    @endforeach
-                                                </span>
-                                            @endif
                                             <span class="block whitespace-wrap px-1">{{ $snoozed_chore->description }}</span>
                                             <span class="px-1"><span class="font-semibold">Snoozed until:</span> {{ \Carbon\Carbon::parse($snoozed_chore->snoozed_until)->format('m/d/y h:i a') }}</span>
+                                            <x-tag-list :tags="$snoozed_chore->tags" class="mt-1 px-1"/>
                                         </span>
                                         <form method="POST" action="{{ route('chores.unsnooze', $snoozed_chore->slug) }}" class="sm:ml-8">
                                             @csrf

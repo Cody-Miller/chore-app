@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Pet;
 use App\Models\Pill;
 use App\Models\PillLog;
+use App\Models\Tag;
 use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -13,7 +14,7 @@ use Illuminate\Support\Str;
 
 /**
  * Seeds pets, their medications and dose history so the pill dashboard
- * (due now, upcoming, completed today), pill logs and missed-dose chart have data.
+ * (due now, upcoming, completed today), pill logs, missed-dose chart and pill tag filter have data.
  */
 class PetSeeder extends Seeder
 {
@@ -31,7 +32,7 @@ class PetSeeder extends Seeder
         $biscuit = $this->createPet('Biscuit', 'Dog', 'Golden Retriever', '2016-04-12', 'Allergic to chicken. Hide pills in peanut butter.');
         $mochi = $this->createPet('Mochi', 'Cat', 'Domestic Shorthair', '2012-09-03', 'Hyperthyroid, vet recheck every 3 months.');
         $pickles = $this->createPet('Pickles', 'Cat', 'Maine Coon', '2023-02-14', 'Will spit out pills, watch him swallow.');
-        $this->createPet('Sunny', 'Bird', 'Cockatiel', '2021-06-30', null);
+        $sunny = $this->createPet('Sunny', 'Bird', 'Cockatiel', '2021-06-30', null);
 
         // [pet, name, dosage, times, created days ago, chance a dose was missed, deleted days ago, paused days ago]
         $pills = [
@@ -41,6 +42,8 @@ class PetSeeder extends Seeder
             [$mochi, 'Prednisolone', '5 mg', ['08:00'], 90, 0.05, null, 20],
             [$pickles, 'Amoxicillin', '50 mg', ['09:00', '21:00'], 10, 0.10, null, null],
             [$pickles, 'Gabapentin', '100 mg', ['22:00'], 80, 0.10, 40, null],
+            [$pickles, 'Fish Oil', '1 pump', ['18:00'], 45, 0.25, null, null],
+            [$sunny, 'Avian Multivitamin', '1 drop', ['08:00'], 60, 0.20, null, null],
         ];
 
         foreach ($pills as $index => [$pet, $name, $dosage, $times, $createdDaysAgo, $missChance, $deletedDaysAgo, $pausedDaysAgo]) {
@@ -66,6 +69,23 @@ class PetSeeder extends Seeder
                 $pill->deleted_at = $endAt;
                 $pill->save();
             }
+        }
+
+        // Fish Oil is left untagged so the tag filter has something to hide
+        $tags = [
+            'Long-term' => ['Carprofen', 'Joint Supplement', 'Methimazole'],
+            'Pain Relief' => ['Carprofen', 'Gabapentin'],
+            'Arthritis' => ['Carprofen', 'Joint Supplement'],
+            'Thyroid' => ['Methimazole'],
+            'Antibiotic' => ['Amoxicillin'],
+            'Steroid' => ['Prednisolone'],
+            'Give With Food' => ['Carprofen', 'Prednisolone', 'Amoxicillin'],
+            'Supplement' => ['Joint Supplement', 'Avian Multivitamin'],
+        ];
+        foreach ($tags as $tagName => $pillNames) {
+            Tag::create(['type' => Pill::tagType(), 'name' => $tagName])
+                ->pills()
+                ->attach(Pill::withTrashed()->whereIn('name', $pillNames)->pluck('id'));
         }
     }
 

@@ -84,7 +84,7 @@ class ChoreSeeder extends Seeder
             'Errands' => ['Grocery Shopping', 'Donate Old Clothes'],
         ];
         foreach ($tags as $tagName => $choreNames) {
-            Tag::create(['name' => $tagName])->chores()->attach(Chore::whereIn('name', $choreNames)->pluck('id'));
+            Tag::create(['type' => Chore::tagType(), 'name' => $tagName])->chores()->attach(Chore::whereIn('name', $choreNames)->pluck('id'));
         }
 
         // A retired chore with history, to exercise soft-deleted handling

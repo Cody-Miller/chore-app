@@ -42,7 +42,7 @@ class ChoreController extends Controller
     {
         return view('chore.create', [
             'users' => User::select('id', 'name')->orderBy('name')->get(),
-            'allTags' => Tag::orderBy('name')->get(['name', 'color']),
+            'allTags' => Chore::tagOptions(),
         ]);
     }
 
@@ -67,7 +67,7 @@ class ChoreController extends Controller
             'occurrence_hours' => $hours,
             'assigned_user_id' => $request->assigned_user_id ?: null,
         ]);
-        $chore->tags()->sync(Tag::findOrCreateByNames($request->input('tags', []))->pluck('id'));
+        $chore->syncTagNames($request->input('tags', []));
 
         return redirect()->route('chores.index');
     }
@@ -91,7 +91,7 @@ class ChoreController extends Controller
             'choreMonth' => $choreMonth,
             'choreDay' => $choreDay,
             'users' => User::select('id', 'name')->orderBy('name')->get(),
-            'allTags' => Tag::orderBy('name')->get(['name', 'color']),
+            'allTags' => Chore::tagOptions(),
         ]);
     }
 
@@ -116,7 +116,7 @@ class ChoreController extends Controller
         $chore->occurrence_hours = $hours;
         $chore->assigned_user_id = $request->assigned_user_id ?: null;
         $chore->save();
-        $chore->tags()->sync(Tag::findOrCreateByNames($request->input('tags', []))->pluck('id'));
+        $chore->syncTagNames($request->input('tags', []));
 
         return redirect()->route('chores.index');
     }

@@ -1,3 +1,36 @@
+@php
+// Primary sections and their sub-pages; 'active' holds the route patterns that highlight each link
+$sections = [
+    [
+        'label' => __('Chores'),
+        'route' => 'dashboard',
+        'active' => ['dashboard', 'chores.*', 'chorelog.*'],
+        'links' => [
+            ['label' => __('Dashboard'), 'route' => 'dashboard', 'active' => ['dashboard']],
+            ['label' => __('All Chores'), 'route' => 'chores.index', 'active' => ['chores.*']],
+            ['label' => __('History'), 'route' => 'chorelog.index', 'active' => ['chorelog.*']],
+        ],
+    ],
+    [
+        'label' => __('Pills'),
+        'route' => 'pills.dashboard',
+        'active' => ['pills.*', 'pilllogs.*', 'pets.*'],
+        'links' => [
+            ['label' => __('Dashboard'), 'route' => 'pills.dashboard', 'active' => ['pills.dashboard']],
+            ['label' => __('All Pills'), 'route' => 'pills.index', 'active' => ['pills.index', 'pills.show', 'pills.create', 'pills.edit']],
+            ['label' => __('History'), 'route' => 'pilllogs.index', 'active' => ['pilllogs.*']],
+            ['label' => __('Pets'), 'route' => 'pets.index', 'active' => ['pets.*']],
+        ],
+    ],
+    [
+        'label' => __('Graphs'),
+        'route' => 'graphs.index',
+        'active' => ['graphs.*'],
+        'links' => [],
+    ],
+];
+$currentSection = collect($sections)->first(fn ($section) => request()->routeIs(...$section['active']));
+@endphp
 <nav x-data="{ open: false }" class="bg-thunder-200 dark:bg-thunder-600 border-b border-thunder-300 dark:border-thunder-600">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -11,67 +44,12 @@
                 </div>
 
                 <!-- Navigation Links -->
-                <!-- Chore Dropdown -->
-                <div class="hidden sm:flex sm:items-center sm:ml-10">
-                    <x-dropdown align="left" width="48">
-                        <x-slot name="trigger">
-                            <button class="inline-flex items-center px-1 pt-1 border-b-2 text-lg font-medium leading-5 transition duration-150 ease-in-out focus:outline-none dark:focus:outline-none border-transparent text-slate-300 hover:text-slate-700 hover:border-indigo-400 focus:text-slate-700 focus:border-gray-300 dark:border-transparent dark:text-gray-300 dark:hover:text-indigo-400 dark:focus:text-indigo-400 dark:hover:border-indigo-400 dark:focus:border-indigo-400 h-20">
-                                <div>{{ __('Chore') }}</div>
-                                <div class="ml-1">
-                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                            </button>
-                        </x-slot>
-                        <x-slot name="content">
-                            <x-dropdown-link :href="route('dashboard')">
-                                {{ __('Chore Dashboard') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('chorelog.index')">
-                                {{ __('Chore History') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('chores.index')">
-                                {{ __('Chore List') }}
-                            </x-dropdown-link>
-                        </x-slot>
-                    </x-dropdown>
-                </div>
-                <!-- Pill Dropdown -->
-                <div class="hidden sm:flex sm:items-center sm:ml-10">
-                    <x-dropdown align="left" width="48">
-                        <x-slot name="trigger">
-                            <button class="inline-flex items-center px-1 pt-1 border-b-2 text-lg font-medium leading-5 transition duration-150 ease-in-out focus:outline-none dark:focus:outline-none border-transparent text-slate-300 hover:text-slate-700 hover:border-indigo-400 focus:text-slate-700 focus:border-gray-300 dark:border-transparent dark:text-gray-300 dark:hover:text-indigo-400 dark:focus:text-indigo-400 dark:hover:border-indigo-400 dark:focus:border-indigo-400 h-20">
-                                <div>{{ __('Pill') }}</div>
-                                <div class="ml-1">
-                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                            </button>
-                        </x-slot>
-                        <x-slot name="content">
-                            <x-dropdown-link :href="route('pills.dashboard')">
-                                {{ __('Pill Dashboard') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('pilllogs.index')">
-                                {{ __('Pill History') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('pills.index')">
-                                {{ __('Pill List') }}
-                            </x-dropdown-link>
-                        </x-slot>
-                    </x-dropdown>
-                </div>
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('graphs.index')" :active="request()->routeIs('graphs.index')">
-                        {{ __('Graphs') }}
-                    </x-nav-link>
-                </div>
-                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('pets.index')" :active="request()->routeIs('pets.index')">
-                        {{ __('Pets') }}
-                    </x-nav-link>
+                    @foreach ($sections as $section)
+                        <x-nav-link :href="route($section['route'])" :active="request()->routeIs(...$section['active'])">
+                            {{ $section['label'] }}
+                        </x-nav-link>
+                    @endforeach
                 </div>
             </div>
 
@@ -120,6 +98,23 @@
             </div>
         </div>
     </div>
+
+    <!-- Section Navigation -->
+    @if ($currentSection && $currentSection['links'])
+        <div class="hidden sm:block border-t border-thunder-300 dark:border-thunder-500">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex">
+                <!-- Spacer the width of the logo, so the link text lines up under the primary links -->
+                <div class="shrink-0 w-20"></div>
+                <div class="flex space-x-2 ml-8">
+                    @foreach ($currentSection['links'] as $link)
+                        <x-sub-nav-link :href="route($link['route'])" :active="request()->routeIs(...$link['active'])">
+                            {{ $link['label'] }}
+                        </x-sub-nav-link>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">

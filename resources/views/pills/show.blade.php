@@ -27,6 +27,7 @@
                                 @endif
                             @endforeach
                         </p>
+                        <x-tag-list :tags="$pill->tags" class="mt-2"/>
 
                         <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 mt-4">
                             <x-buttons.primary-link-button href="/pills/{{ $pill->slug }}/edit" class="w-full sm:w-auto">

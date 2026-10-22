@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesTags;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdatePillRequest extends FormRequest
 {
+    use ValidatesTags;
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -49,7 +52,8 @@ class UpdatePillRequest extends FormRequest
             ],
             'is_active' => [
                 'boolean'
-            ]
+            ],
+            ...$this->tagRules()
         ];
     }
 }

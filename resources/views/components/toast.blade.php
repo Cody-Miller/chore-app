@@ -24,6 +24,11 @@
             View
         </a>
         @endif
+        @if(session('success_edit_url'))
+        <a href="{{ session('success_edit_url') }}" class="px-2 py-1 text-sm font-semibold rounded bg-white/20 hover:bg-white/30">
+            Edit time
+        </a>
+        @endif
         <button @click="show = false" class="ml-2 hover:opacity-75">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

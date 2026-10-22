@@ -63,7 +63,7 @@
                             <ul class="mx-4">
                                 @foreach($chores as $chore)
                                     <li x-show="!search || '{{ strtolower($chore->name) }}'.includes(search.toLowerCase()) || '{{ strtolower($chore->description) }}'.includes(search.toLowerCase()) || @js($chore->tags->map(fn ($tag) => mb_strtolower($tag->name))).some(tag => tag.includes(search.toLowerCase()))">
-                                        <x-chore-display :chore="$chore"/>
+                                        <x-chore-display quick_complete="true" :chore="$chore"/>
                                     </li>
                                 @endforeach
                             </ul>
@@ -71,6 +71,8 @@
                             @if ($chores->count() === 0)
                                 <p class="mx-4 mt-6 text-gray-500 dark:text-gray-400">No chores match these filters.</p>
                             @endif
+
+                            <x-chore-complete-modal :users="$users" :redirectTo="url()->full()" x-bind:action="'/chorelog/' + choreId"/>
                         </div>
                     @else
                         <h3>No chores created yet, get in there and make some!</h3>

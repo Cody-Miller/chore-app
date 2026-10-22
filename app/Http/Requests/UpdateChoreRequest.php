@@ -3,11 +3,14 @@
 namespace App\Http\Requests;
 
 use App\Models\Chore;
+use App\Http\Requests\Concerns\ValidatesTags;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateChoreRequest extends FormRequest
 {
+    use ValidatesTags;
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -50,17 +53,7 @@ class UpdateChoreRequest extends FormRequest
                 'integer',
                 Rule::exists('users', 'id')
             ],
-            'tags' => [
-                'nullable',
-                'array',
-                'max:10'
-            ],
-            'tags.*' => [
-                'nullable',
-                'string',
-                'max:50',
-                'distinct:ignore_case'
-            ]
+            ...$this->tagRules()
         ];
     }
 }

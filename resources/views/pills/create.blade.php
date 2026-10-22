@@ -1,4 +1,4 @@
-@props(['pets' => null])
+@props(['pets' => null, 'allTags' => collect()])
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -35,7 +35,9 @@
 
                         <x-form.textarea name='description' placeholder="{{ __('Description/Instructions (optional)') }}"></x-form.textarea>
 
-                        <div class="mb-4">
+                        <x-form.tag-input :all-tags="$allTags">{{ __('Tags:') }}</x-form.tag-input>
+
+                        <div class="mt-6 mb-4">
                             <label class="block font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
                                 Scheduled Times:
                             </label>
