@@ -89,6 +89,29 @@ services:
             - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
         networks:
             - sail
+    ntfy:
+        image: 'binwiederhier/ntfy:v2.28.0'
+        command: serve
+        ports:
+            - '${FORWARD_NTFY_PORT:-8090}:80'
+        environment:
+            NTFY_BASE_URL: '${NTFY_PUBLIC_URL:-http://localhost:8090}'
+            NTFY_CACHE_FILE: /var/lib/ntfy/cache.db
+            NTFY_AUTH_FILE: /var/lib/ntfy/auth.db
+            NTFY_AUTH_DEFAULT_ACCESS: deny-all
+            NTFY_BEHIND_PROXY: '${NTFY_BEHIND_PROXY:-false}'
+            NTFY_UPSTREAM_BASE_URL: https://ntfy.sh
+            NTFY_ENABLE_LOGIN: 'true'
+        volumes:
+            - 'sail-ntfy:/var/lib/ntfy'
+        networks:
+            - sail
+        healthcheck:
+            test:
+                - CMD-SHELL
+                - 'wget -q --tries=1 http://localhost:80/v1/health -O - | grep -Eo ''"healthy"\s*:\s*true'' || exit 1'
+            retries: 3
+            timeout: 5s
     selenium:
         image: selenium/standalone-chrome
         extra_hosts:
@@ -106,4 +129,6 @@ volumes:
     sail-redis:
         driver: local
     sail-meilisearch:
+        driver: local
+    sail-ntfy:
         driver: local

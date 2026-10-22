@@ -60,6 +60,7 @@ class PillController extends Controller
             'dosage' => $request->dosage,
             'scheduled_times' => $request->scheduled_times,
             'is_active' => $request->boolean('is_active', true),
+            'notifications_enabled' => $request->boolean('notifications_enabled'),
         ]);
         $pill->syncTagNames($request->input('tags', []));
 
@@ -103,6 +104,7 @@ class PillController extends Controller
         $pill->dosage = $request->dosage;
         $pill->scheduled_times = $request->scheduled_times;
         $pill->is_active = $request->boolean('is_active');
+        $pill->notifications_enabled = $request->boolean('notifications_enabled');
         $pill->save();
         $pill->syncTagNames($request->input('tags', []));
 

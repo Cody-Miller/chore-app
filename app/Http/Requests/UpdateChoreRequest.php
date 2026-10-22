@@ -53,6 +53,9 @@ class UpdateChoreRequest extends FormRequest
                 'integer',
                 Rule::exists('users', 'id')
             ],
+            'notifications_enabled' => [
+                'boolean'
+            ],
             ...$this->tagRules()
         ];
     }

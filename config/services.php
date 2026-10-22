@@ -31,4 +31,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Push reminders for chores and pills, see docs/ntfy-setup.md
+    'ntfy' => [
+        'url' => env('NTFY_URL'),
+        'token' => env('NTFY_TOKEN'),
+        'chore_time' => env('NTFY_CHORE_TIME', '08:00'),
+    ],
+
 ];

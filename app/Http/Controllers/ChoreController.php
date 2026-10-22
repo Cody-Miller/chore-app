@@ -66,6 +66,7 @@ class ChoreController extends Controller
             'weight' => $request->weight,
             'occurrence_hours' => $hours,
             'assigned_user_id' => $request->assigned_user_id ?: null,
+            'notifications_enabled' => $request->boolean('notifications_enabled'),
         ]);
         $chore->syncTagNames($request->input('tags', []));
 
@@ -115,6 +116,7 @@ class ChoreController extends Controller
         $chore->weight = $request->weight;
         $chore->occurrence_hours = $hours;
         $chore->assigned_user_id = $request->assigned_user_id ?: null;
+        $chore->notifications_enabled = $request->boolean('notifications_enabled');
         $chore->save();
         $chore->syncTagNames($request->input('tags', []));
 

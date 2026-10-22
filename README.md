@@ -9,6 +9,7 @@ A self-hosted Laravel app for tracking household chores (and pet medication sche
 - **Snoozing** — temporarily snooze a chore so it drops off the due list without logging a completion (`App\Http\Controllers\ChoreSnoozeController`).
 - **Graphs** — visual breakdowns of completions and missed chores over time, built with [LarapexCharts](https://github.com/ArielMejiaDev/larapex-charts).
 - **Pet & pill tracking** — manage pets and their medication schedules, log doses, and view an at-a-glance pill dashboard.
+- **Reminders** — opt-in push notifications for chores due today and medication doses, with a Done button, through a self-hosted [ntfy](https://ntfy.sh) server. See [docs/ntfy-setup.md](docs/ntfy-setup.md).
 - **API tokens** — issue personal access tokens (Laravel Sanctum) for scripting against the app's API.
 
 ## Tech stack

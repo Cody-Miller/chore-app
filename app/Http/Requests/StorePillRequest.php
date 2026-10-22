@@ -50,6 +50,9 @@ class StorePillRequest extends FormRequest
             'is_active' => [
                 'boolean'
             ],
+            'notifications_enabled' => [
+                'boolean'
+            ],
             ...$this->tagRules()
         ];
     }

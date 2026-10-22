@@ -81,6 +81,9 @@
 
                             </div>
                         </div>
+                        <x-form.reminder-toggle :checked="$chore->notifications_enabled" class="mt-5">
+                            {{ __('Sends an ntfy notification at :time on days this chore is due.', ['time' => date('g:i A', strtotime(config('services.ntfy.chore_time')))]) }}
+                        </x-form.reminder-toggle>
                         <div class="flex flex-col sm:flex-row sm:justify-between gap-3 mt-5">
                             <x-buttons.cancel-link-button href="/chores/{{ $chore->slug }}" class="w-full sm:w-auto">
                                 {{ __('Cancel') }}

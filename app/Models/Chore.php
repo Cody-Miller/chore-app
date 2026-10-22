@@ -18,6 +18,11 @@ class Chore extends Model
         'weight',
         'occurrence_hours',
         'assigned_user_id',
+        'notifications_enabled',
+    ];
+
+    protected $casts = [
+        'notifications_enabled' => 'boolean',
     ];
 
     /**
@@ -44,12 +49,7 @@ class Chore extends Model
             );
 
         // Filter out globally snoozed chores
-        $query->whereNotExists(function ($q) {
-            $q->select(\DB::raw(1))
-                ->from('chore_snoozes')
-                ->whereColumn('chore_snoozes.chore_id', 'chores.id')
-                ->where('chore_snoozes.snoozed_until', '>', now());
-        });
+        $query->notSnoozed();
 
         if (!$showAll && $userId) {
             $query->visibleOnDashboardFor($userId);
@@ -74,12 +74,7 @@ class Chore extends Model
             );
 
         // Filter out globally snoozed chores
-        $query->whereNotExists(function ($q) {
-            $q->select(\DB::raw(1))
-                ->from('chore_snoozes')
-                ->whereColumn('chore_snoozes.chore_id', 'chores.id')
-                ->where('chore_snoozes.snoozed_until', '>', now());
-        });
+        $query->notSnoozed();
 
         if (!$showAll && $userId) {
             $query->visibleOnDashboardFor($userId);
@@ -102,6 +97,40 @@ class Chore extends Model
         }
 
         return $query->get();
+    }
+
+    /**
+     * Chores due today or overdue, for the morning reminder. Snoozed chores are left out,
+     * and one-time chores count until they have been completed once.
+     */
+    public static function getDueToday()
+    {
+        // Compare against the app's date rather than MySQL's NOW(), which may be in another timezone
+        $today = now()->toDateString();
+
+        $recurring = self::select('chores.*')
+            ->with('assignedUser')
+            ->leftJoin('chore_logs', function ($join) {
+                $join->on('chores.id', '=', 'chore_logs.chore_id')
+                    ->whereNull('chore_logs.deleted_at');
+            })
+            ->whereNull('chores.deleted_at')
+            ->where('chores.occurrence_hours', '!=', 0)
+            ->notSnoozed()
+            ->groupBy('chores.id')
+            ->havingRaw(
+                'MAX(chore_logs.completed_at) IS NULL OR DATE(DATE_ADD(MAX(chore_logs.completed_at), INTERVAL chores.occurrence_hours HOUR)) <= ?',
+                [$today]
+            )
+            ->get();
+
+        $oneTime = self::with('assignedUser')
+            ->where('occurrence_hours', 0)
+            ->notSnoozed()
+            ->whereDoesntHave('choreLogs')
+            ->get();
+
+        return $recurring->merge($oneTime);
     }
 
     public function hasCompleted()
@@ -137,6 +166,19 @@ class Chore extends Model
         return $query->where(function ($q) use ($userId) {
             $q->whereNull('chores.assigned_user_id')
                 ->orWhere('chores.assigned_user_id', $userId);
+        });
+    }
+
+    /**
+     * Limit to chores without an active snooze.
+     */
+    public function scopeNotSnoozed($query)
+    {
+        return $query->whereNotExists(function ($q) {
+            $q->select(\DB::raw(1))
+                ->from('chore_snoozes')
+                ->whereColumn('chore_snoozes.chore_id', 'chores.id')
+                ->where('chore_snoozes.snoozed_until', '>', now());
         });
     }
 

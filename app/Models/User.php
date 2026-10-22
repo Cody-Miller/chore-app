@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'ntfy_topic',
     ];
 
     /**
@@ -64,5 +65,21 @@ class User extends Authenticatable
     public function assignedChores()
     {
         return $this->hasMany(Chore::class, 'assigned_user_id');
+    }
+
+    /**
+     * Limit to users who have set an ntfy topic to receive reminders on.
+     */
+    public function scopeWithNtfyTopic($query)
+    {
+        return $query->whereNotNull('ntfy_topic')->where('ntfy_topic', '!=', '');
+    }
+
+    /**
+     * The ntfy topic reminders are published to (used by NtfyChannel).
+     */
+    public function routeNotificationForNtfy(): ?string
+    {
+        return $this->ntfy_topic ?: null;
     }
 }

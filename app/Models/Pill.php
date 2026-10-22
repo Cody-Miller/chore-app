@@ -20,11 +20,13 @@ class Pill extends Model
         'dosage',
         'scheduled_times',
         'is_active',
+        'notifications_enabled',
     ];
 
     protected $casts = [
         'scheduled_times' => 'array',
         'is_active' => 'boolean',
+        'notifications_enabled' => 'boolean',
     ];
 
     /**

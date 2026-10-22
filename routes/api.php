@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PetApiController;
 use App\Http\Controllers\Api\PillApiController;
+use App\Http\Controllers\ReminderCompletionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,4 +31,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Record medication dose (smart logic - accepts pet and optional pill in body)
     Route::post('/record-medication', [PillApiController::class, 'recordMedication']);
+});
+
+// Done/Given buttons on ntfy reminders. The signed URL stands in for a token and only
+// covers one chore or dose for one user; "relative" keeps it valid behind a reverse proxy.
+Route::middleware('signed:relative')->group(function () {
+    Route::post('/reminders/chores/{chore}/users/{user}/complete', [ReminderCompletionController::class, 'chore'])
+        ->name('reminders.chores.complete');
+    Route::post('/reminders/pills/{pill}/users/{user}/complete', [ReminderCompletionController::class, 'pill'])
+        ->name('reminders.pills.complete');
 });

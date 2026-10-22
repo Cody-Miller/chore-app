@@ -12,6 +12,7 @@ use App\Http\Controllers\PillController;
 use App\Http\Controllers\PillLogController;
 use App\Http\Controllers\PillDashboardController;
 use App\Http\Controllers\ApiTokenController;
+use App\Http\Controllers\NotificationSettingsController;
 
 require __DIR__ . '/auth.php';
 
@@ -39,6 +40,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // API Token Management
     Route::post('/profile/api-tokens', [ApiTokenController::class, 'store'])->name('api-tokens.store');
     Route::delete('/profile/api-tokens/{token}', [ApiTokenController::class, 'destroy'])->name('api-tokens.destroy');
+
+    // ntfy Notification Settings
+    Route::patch('/profile/notifications', [NotificationSettingsController::class, 'update'])->name('notifications.update');
+    Route::post('/profile/notifications/test', [NotificationSettingsController::class, 'test'])->name('notifications.test');
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
