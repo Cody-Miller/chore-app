@@ -16,6 +16,9 @@
                 @endif
             @endif
         </span>
+        @if($chore->assignedUser)
+            <span class="px-1"><span class="font-semibold">Assigned To:</span> {{ $chore->assignedUser->name }}</span>
+        @endif
         @if($chore->hasCompleted())
             <span class="px-1"><span class="font-semibold">Last Completed:</span> {{ $chore->getLastCompletedUser() }} - {{ $chore->getLastCompletedDate()->format('m/d/y h:i a') }}</span>
         @endif

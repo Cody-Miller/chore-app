@@ -14,13 +14,15 @@ class ChoreController extends Controller
     public function index()
     {
         return view('chore.index', [
-            'chores' => Chore::latest()->paginate(50),
+            'chores' => Chore::with('assignedUser')->latest()->paginate(50),
         ]);
     }
 
     public function create()
     {
-        return view('chore.create');
+        return view('chore.create', [
+            'users' => User::select('id', 'name')->orderBy('name')->get(),
+        ]);
     }
 
     public function store(StoreChoreRequest $request)
@@ -42,6 +44,7 @@ class ChoreController extends Controller
             'description' => $request->desc,
             'weight' => $request->weight,
             'occurrence_hours' => $hours,
+            'assigned_user_id' => $request->assigned_user_id ?: null,
         ]);
 
         return redirect()->route('chores.index');
@@ -50,7 +53,7 @@ class ChoreController extends Controller
     public function show(Chore $chore)
     {
         return view('chore.show', [
-            'chore' => $chore,
+            'chore' => $chore->load('assignedUser'),
             'users' => User::select('id', 'name')->get(),
         ]);
     }
@@ -65,6 +68,7 @@ class ChoreController extends Controller
             'chore' => $chore,
             'choreMonth' => $choreMonth,
             'choreDay' => $choreDay,
+            'users' => User::select('id', 'name')->orderBy('name')->get(),
         ]);
     }
 
@@ -87,6 +91,7 @@ class ChoreController extends Controller
         $chore->description = $request->desc;
         $chore->weight = $request->weight;
         $chore->occurrence_hours = $hours;
+        $chore->assigned_user_id = $request->assigned_user_id ?: null;
         $chore->save();
 
         return redirect()->route('chores.index');

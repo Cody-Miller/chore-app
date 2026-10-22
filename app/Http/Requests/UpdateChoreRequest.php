@@ -44,6 +44,11 @@ class UpdateChoreRequest extends FormRequest
                 'required',
                 'integer',
                 'between:1,5'
+            ],
+            'assigned_user_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id')
             ]
         ];
     }

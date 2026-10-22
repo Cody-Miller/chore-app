@@ -42,6 +42,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/dashboard/show-all-chores', [DashboardController::class, 'toggleShowAll'])->name('dashboard.toggle-show-all');
 
     // Graphs
     Route::get('/graphs', [GraphsController::class, 'index'])->name('graphs.index');

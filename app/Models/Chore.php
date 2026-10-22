@@ -16,6 +16,7 @@ class Chore extends Model
         'description',
         'weight',
         'occurrence_hours',
+        'assigned_user_id',
     ];
 
     /**
@@ -26,9 +27,10 @@ class Chore extends Model
         return 'slug';
     }
 
-    public static function getDue($userId = null)
+    public static function getDue($userId = null, $showAll = true)
     {
         $query = self::select('chores.*')
+            ->with('assignedUser')
             ->leftJoin('chore_logs', function ($join) {
                 $join->on('chores.id', '=', 'chore_logs.chore_id')
                     ->whereNull('chore_logs.deleted_at');
@@ -48,12 +50,17 @@ class Chore extends Model
                 ->where('chore_snoozes.snoozed_until', '>', now());
         });
 
+        if (!$showAll && $userId) {
+            $query->visibleOnDashboardFor($userId);
+        }
+
         return $query->get();
     }
 
-    public static function getUpcoming($userId = null)
+    public static function getUpcoming($userId = null, $showAll = true)
     {
         $query = self::select('chores.*')
+            ->with('assignedUser')
             ->leftJoin('chore_logs', function ($join) {
                 $join->on('chores.id', '=', 'chore_logs.chore_id')
                     ->whereNull('chore_logs.deleted_at');
@@ -73,17 +80,25 @@ class Chore extends Model
                 ->where('chore_snoozes.snoozed_until', '>', now());
         });
 
+        if (!$showAll && $userId) {
+            $query->visibleOnDashboardFor($userId);
+        }
+
         return $query->get();
     }
 
-    public static function getOneTime($userId = null)
+    public static function getOneTime($userId = null, $showAll = true)
     {
-        $query = self::where('occurrence_hours', 0);
+        $query = self::with('assignedUser')->where('occurrence_hours', 0);
 
         // Filter out globally snoozed chores
         $query->whereDoesntHave('snoozes', function ($q) {
             $q->where('snoozed_until', '>', now());
         });
+
+        if (!$showAll && $userId) {
+            $query->visibleOnDashboardFor($userId);
+        }
 
         return $query->get();
     }
@@ -106,6 +121,22 @@ class Chore extends Model
     public function snoozes()
     {
         return $this->hasMany(ChoreSnooze::class);
+    }
+
+    public function assignedUser()
+    {
+        return $this->belongsTo(User::class, 'assigned_user_id');
+    }
+
+    /**
+     * Limit to chores that are unassigned or assigned to the given user.
+     */
+    public function scopeVisibleOnDashboardFor($query, $userId)
+    {
+        return $query->where(function ($q) use ($userId) {
+            $q->whereNull('chores.assigned_user_id')
+                ->orWhere('chores.assigned_user_id', $userId);
+        });
     }
 
     /**

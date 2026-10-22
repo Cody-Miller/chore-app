@@ -17,6 +17,16 @@
 
                         <x-form.input name='name' type='text'>{{ __('Name:') }}</x-form.input>
                         <x-form.input name='desc' type='text'>{{ __('Description:') }}</x-form.input>
+                        <x-form.select-input name="assigned_user_id" :label-content="'Assigned To:'">
+                            <x-form.select-input-option value="" :selected="!old('assigned_user_id')">
+                                {{ __('Unassigned') }}
+                            </x-form.select-input-option>
+                            @foreach($users as $user)
+                                <x-form.select-input-option value="{{ $user->id }}" :selected="old('assigned_user_id') == $user->id">
+                                    {{ $user->name }}
+                                </x-form.select-input-option>
+                            @endforeach
+                        </x-form.select-input>
                         <div
                             class="flex flex-wrap justify-between"
                             x-data="{

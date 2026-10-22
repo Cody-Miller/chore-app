@@ -1,4 +1,4 @@
-@props(['due-now-chores' => null, 'choreMonth' => 0, 'choreDay' => 4])
+@props(['due-now-chores' => null, 'choreMonth' => 0, 'choreDay' => 4, 'users' => []])
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -17,6 +17,16 @@
 
                         <x-form.input :default="$chore->name" name='name'>{{ __('Name:') }}</x-form.input>
                         <x-form.input :default="$chore->description" name='desc'>{{ __('Description:') }}</x-form.input>
+                        <x-form.select-input name="assigned_user_id" :label-content="'Assigned To:'">
+                            <x-form.select-input-option value="" :selected="!old('assigned_user_id', $chore->assigned_user_id)">
+                                {{ __('Unassigned') }}
+                            </x-form.select-input-option>
+                            @foreach($users as $user)
+                                <x-form.select-input-option value="{{ $user->id }}" :selected="old('assigned_user_id', $chore->assigned_user_id) == $user->id">
+                                    {{ $user->name }}
+                                </x-form.select-input-option>
+                            @endforeach
+                        </x-form.select-input>
                         <div
                             class="flex flex-wrap justify-between"
                             x-data="{

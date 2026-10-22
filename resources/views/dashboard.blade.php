@@ -1,4 +1,4 @@
-@props(['due_now_chores' => null, 'upcoming_chores' => null, 'one_time_chores' => null, 'snoozed_chores' => null, 'users' => null])
+@props(['due_now_chores' => null, 'upcoming_chores' => null, 'one_time_chores' => null, 'snoozed_chores' => null, 'users' => null, 'show_all_chores' => false])
 
 <x-app-layout>
     <x-slot name="header">
@@ -14,6 +14,15 @@
             </div>
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-4 text-gray-900 dark:text-gray-100">
+                    <form method="POST" action="{{ route('dashboard.toggle-show-all') }}" class="flex justify-end mb-4">
+                        @csrf
+                        <input type="hidden" name="tab" x-bind:value="currentTab">
+                        <label class="inline-flex items-center cursor-pointer gap-3">
+                            <span class="text-sm font-semibold">{{ __('Show all chores') }}</span>
+                            <input type="checkbox" class="sr-only peer" onchange="this.form.submit()" @checked($show_all_chores)>
+                            <span class="relative w-11 h-6 bg-gray-300 dark:bg-gray-700 rounded-full peer-focus:ring-2 peer-focus:ring-indigo-500 peer-checked:bg-indigo-500 after:content-[''] after:absolute after:top-0.5 after:start-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></span>
+                        </label>
+                    </form>
                     <x-tab.wrapper defaultTabNumber="1">
                         <x-tab.group>
                             <x-tab.link tabNumber="1">
