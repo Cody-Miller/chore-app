@@ -74,6 +74,7 @@ class PillLog extends Model
     /**
      * Get missed doses by pill for a date range.
      * A dose is missed if its scheduled time has passed but no log exists.
+     * Doses scheduled before the pill was created are not counted.
      */
     public static function getMissedDosesByPill($startDate, $endDate)
     {
@@ -83,25 +84,30 @@ class PillLog extends Model
         $period = CarbonPeriod::create($startDate, $endDate);
         $now = now();
 
+        // Load every log in the range once, keyed by pill / effective date / scheduled time
+        $administered = static::whereIn('pill_id', $pills->pluck('id'))
+            ->where('administered_at', '>=', static::getEffectiveDayStart($startDate->copy()))
+            ->where('administered_at', '<=', static::getEffectiveDayEnd($endDate->copy()))
+            ->get(['pill_id', 'administered_at', 'scheduled_time'])
+            ->mapWithKeys(fn ($log) => [
+                $log->pill_id.'|'.static::getEffectiveDate($log->administered_at)->format('Y-m-d').'|'.$log->scheduled_time => true,
+            ]);
+
         foreach ($pills as $pill) {
             foreach ($period as $date) {
                 $missedCount = 0;
 
-                // Calculate effective day boundaries for this date
-                $effectiveDayStart = static::getEffectiveDayStart($date);
-                $effectiveDayEnd = static::getEffectiveDayEnd($date);
-
                 foreach ($pill->scheduled_times ?? [] as $scheduledTime) {
-                    // Only count as missed if the time has passed
+                    // Times before the cutoff belong to the next calendar day
                     $scheduledDateTime = $date->copy()->setTimeFromTimeString($scheduledTime);
-                    if ($scheduledDateTime->lt($now)) {
-                        $exists = static::where('pill_id', $pill->id)
-                            ->where('administered_at', '>=', $effectiveDayStart)
-                            ->where('administered_at', '<=', $effectiveDayEnd)
-                            ->where('scheduled_time', $scheduledTime)
-                            ->whereNull('deleted_at')
-                            ->exists();
-                        if (! $exists) {
+                    if ($scheduledDateTime->hour < static::DAY_CUTOFF_HOUR) {
+                        $scheduledDateTime->addDay();
+                    }
+
+                    // Only count as missed if the time has passed and the pill existed
+                    if ($scheduledDateTime->lt($now) && $scheduledDateTime->gte($pill->created_at)) {
+                        $key = $pill->id.'|'.$date->format('Y-m-d').'|'.$scheduledTime;
+                        if (! isset($administered[$key])) {
                             $missedCount++;
                         }
                     }

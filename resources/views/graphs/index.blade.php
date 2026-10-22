@@ -14,9 +14,11 @@
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">User Activity by Day of Week</h3>
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">View chore completions broken down by weekday for each user, showing both counts and weighted totals.</p>
                     <form method="GET" action="{{ route('graphs.index') }}" class="mb-6">
-                        <!-- Preserve month date range if it exists -->
+                        <!-- Preserve other date ranges -->
                         <input type="hidden" name="month_start_date" value="{{ $monthStartDate }}">
                         <input type="hidden" name="month_end_date" value="{{ $monthEndDate }}">
+                        <input type="hidden" name="pill_start_date" value="{{ $pillStartDate }}">
+                        <input type="hidden" name="pill_end_date" value="{{ $pillEndDate }}">
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
@@ -52,6 +54,11 @@
                             {!! $chartWeekWeighted->container() !!}
                         </div>
                     @endif
+                    @if(! $chartWeek && ! $chartWeekWeighted)
+                        <div class="p-4 bg-gray-50 dark:bg-gray-700 sm:rounded-lg text-center text-gray-600 dark:text-gray-300">
+                            No chores completed in the selected date range.
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -61,9 +68,11 @@
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">User Contribution & Chore Completion Analysis</h3>
                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Compare user contributions by percentage, identify the most frequently completed chores, and see which recurring chores are falling behind their expected schedule.</p>
                     <form method="GET" action="{{ route('graphs.index') }}" class="mb-6">
-                        <!-- Preserve week date range if it exists -->
+                        <!-- Preserve other date ranges -->
                         <input type="hidden" name="week_start_date" value="{{ $weekStartDate }}">
                         <input type="hidden" name="week_end_date" value="{{ $weekEndDate }}">
+                        <input type="hidden" name="pill_start_date" value="{{ $pillStartDate }}">
+                        <input type="hidden" name="pill_end_date" value="{{ $pillEndDate }}">
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
@@ -102,6 +111,11 @@
                     @if($chartChoreRate)
                         <div class="p-4 bg-gray-50 dark:bg-gray-200 sm:rounded-lg shadow">
                             {!! $chartChoreRate->container() !!}
+                        </div>
+                    @endif
+                    @if(! $chartMonth && ! $chartChoreFrequency)
+                        <div class="p-4 bg-gray-50 dark:bg-gray-700 sm:rounded-lg text-center text-gray-600 dark:text-gray-300">
+                            No chores completed in the selected date range.
                         </div>
                     @endif
                 </div>
@@ -170,13 +184,9 @@
         </div>
     </div>
 </x-app-layout>
-@if($chartWeek) <script src="{{ $chartWeek->cdn() }}"></script> @endif
-{{--@if($chartWeekWeighted) <script src="{{ $chartWeekWeighted->cdn() }}"></script> @endif--}}
-@if($chartMonth) <script src="{{ $chartMonth->cdn() }}"></script> @endif
-@if($chartYear) <script src="{{ $chartYear->cdn() }}"></script> @endif
-@if($chartChoreFrequency) <script src="{{ $chartChoreFrequency->cdn() }}"></script> @endif
-@if($chartChoreRate) <script src="{{ $chartChoreRate->cdn() }}"></script> @endif
-@if($chartPillMissedDoses) <script src="{{ $chartPillMissedDoses->cdn() }}"></script> @endif
+@if($chartWeek || $chartWeekWeighted || $chartMonth || $chartYear || $chartChoreFrequency || $chartChoreRate || $chartPillMissedDoses)
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.54.1"></script>
+@endif
 @if($chartWeek) {{ $chartWeek->script() }} @endif
 @if($chartWeekWeighted) {{ $chartWeekWeighted->script() }} @endif
 @if($chartMonth) {{ $chartMonth->script() }} @endif

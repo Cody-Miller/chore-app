@@ -70,9 +70,14 @@
 
                             </div>
                         </div>
-                        <x-buttons.primary-button type="submit" class="mt-5 w-full sm:w-auto">
-                            {{ __('Update') }}
-                        </x-buttons.primary-button>
+                        <div class="flex flex-col sm:flex-row sm:justify-between gap-3 mt-5">
+                            <x-buttons.cancel-link-button href="/chores/{{ $chore->slug }}" class="w-full sm:w-auto">
+                                {{ __('Cancel') }}
+                            </x-buttons.cancel-link-button>
+                            <x-buttons.primary-button type="submit" class="w-full sm:w-auto">
+                                {{ __('Update') }}
+                            </x-buttons.primary-button>
+                        </div>
                     </form>
                 </div>
             </div>

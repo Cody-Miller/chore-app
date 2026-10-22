@@ -22,12 +22,12 @@
     </span>
     @if($quick_complete)
         <div class="flex flex-col sm:flex-row gap-2 sm:ml-8 sm:whitespace-nowrap">
-            <x-modal.button class="w-full sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-500 focus:ring-2 focus:ring-offset-2" name="complete_chore" :slug="$chore->slug">
-                Complete
-            </x-modal.button>
             <x-buttons.snooze-button :slug="$chore->slug" class="w-full sm:w-auto">
                 Snooze
             </x-buttons.snooze-button>
+            <x-modal.button class="w-full sm:w-auto" variant="primary" name="complete_chore" :slug="$chore->slug">
+                Complete
+            </x-modal.button>
         </div>
     @endif
 </div>

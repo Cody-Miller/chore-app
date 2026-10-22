@@ -26,12 +26,12 @@ class UserActionMonth extends Charts
         $weights = [];
         $names = [];
         $records = ChoreLog::getChoreLogsWeightByUsers($startDate, $endDate);
-        if ($records->count() > 0) {
+        // Pie computes the percentages itself, raw weights keep the tooltips meaningful
+        if ($records->sum('total_weight') > 0) {
             $this->hasData = true;
         }
-        $totalWeight = $records->sum('total_weight');
         foreach ($records as $record) {
-            $weights[] = round($record->total_weight / $totalWeight * 100, 2);
+            $weights[] = round((float) $record->total_weight, 1);
             $names[] = $record->name;
         }
         $dateRange = $startDate->format('M d') . ' - ' . $endDate->format('M d, Y');

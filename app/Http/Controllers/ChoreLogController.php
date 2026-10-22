@@ -71,10 +71,14 @@ class ChoreLogController extends Controller
                 $url .= (str_contains($url, '?') ? '&' : '?').'tab='.$tab;
             }
 
-            return redirect($url)->with('success', $successMessage);
+            return redirect($url)
+                ->with('success', $successMessage)
+                ->with('success_action_url', route('chores.show', $chore));
         }
 
-        return redirect()->route('dashboard')->with('success', $successMessage);
+        return redirect()->route('dashboard')
+            ->with('success', $successMessage)
+            ->with('success_action_url', route('chores.show', $chore));
     }
 
     public function edit(ChoreLog $chorelog)
