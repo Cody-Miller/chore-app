@@ -6,7 +6,7 @@
             {{ __('Chore Dashboard') }}
         </h2>
     </x-slot>
-    <div class="pb-12" x-data="{ choreId: '', currentTab: parseInt(new URLSearchParams(window.location.search).get('tab')) || 1 }" @tab-changed.window="currentTab = $event.detail">
+    <div class="pb-12" x-data="{ choreId: '', choreAnchor: '', currentTab: parseInt(new URLSearchParams(window.location.search).get('tab')) || 1 }" @tab-changed.window="currentTab = $event.detail" @open-modal.window="choreAnchor = $event.detail[2] || ''">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="p-6 text-gray-900 dark:text-gray-100">
                 <h5>Don't be bored... Bee Chored</h5>
@@ -27,15 +27,15 @@
                         <x-tab.group>
                             <x-tab.link tabNumber="1">
                                 {{ __('Due Now') }}
+                                <span class="hidden sm:inline ml-1 text-xs opacity-75">({{ count($due_now_chores ?? []) }} / {{ count($upcoming_chores ?? []) }})</span>
                             </x-tab.link>
                             <x-tab.link tabNumber="2">
-                                {{ __('Upcoming') }}
+                                {{ __('Non-Reoccuring') }}
+                                <span class="hidden sm:inline ml-1 text-xs opacity-75">({{ count($one_time_chores ?? []) }})</span>
                             </x-tab.link>
                             <x-tab.link tabNumber="3">
-                                {{ __('Non-Reoccuring') }}
-                            </x-tab.link>
-                            <x-tab.link tabNumber="4">
                                 {{ __('Snoozed') }}
+                                <span class="hidden sm:inline ml-1 text-xs opacity-75">({{ count($snoozed_chores ?? []) }})</span>
                             </x-tab.link>
                         </x-tab.group>
                         <x-tab.content tabNumber="1">
@@ -46,17 +46,18 @@
                             @else
                                 <p>No chores do right now nice job! 😎</p>
                             @endif
+                            <div id="upcoming" class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 scroll-mt-4">
+                                <h3 class="font-semibold text-indigo-400 mb-2">{{ __('Upcoming') }}</h3>
+                                @if($upcoming_chores && count($upcoming_chores))
+                                    @foreach($upcoming_chores as $upcoming_chore)
+                                        <x-chore-display quick_complete="true" :chore="$upcoming_chore" anchor="upcoming"/>
+                                    @endforeach
+                                @else
+                                    <p>No upcoming chores, that's a shocker! ⚡</p>
+                                @endif
+                            </div>
                         </x-tab.content>
                         <x-tab.content tabNumber="2">
-                            @if($upcoming_chores && count($upcoming_chores))
-                                @foreach($upcoming_chores as $upcoming_chore)
-                                    <x-chore-display quick_complete="true" :chore="$upcoming_chore"/>
-                                @endforeach
-                            @else
-                                <p>No upcoming chores, that's a shocker! ⚡</p>
-                            @endif
-                        </x-tab.content>
-                        <x-tab.content tabNumber="3">
                             @if($one_time_chores && count($one_time_chores))
                                 @foreach($one_time_chores as $one_time_chore)
                                     <x-chore-display quick_complete="true" :chore="$one_time_chore"/>
@@ -65,7 +66,7 @@
                                 <p>No one time chores for once...</p>
                             @endif
                         </x-tab.content>
-                        <x-tab.content tabNumber="4">
+                        <x-tab.content tabNumber="3">
                             @if($snoozed_chores && count($snoozed_chores))
                                 @foreach($snoozed_chores as $snoozed_chore)
                                     <div class="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -73,6 +74,13 @@
                                             <a class="text-lg font-bold dark:text-indigo-500 block mb-1" href="/chores/{{ $snoozed_chore->slug }}">
                                                 {{ $snoozed_chore->name }}
                                             </a>
+                                            @if($snoozed_chore->tags->isNotEmpty())
+                                                <span class="flex flex-wrap gap-1 mb-1 px-1">
+                                                    @foreach($snoozed_chore->tags as $tag)
+                                                        <x-tag-badge :tag="$tag"/>
+                                                    @endforeach
+                                                </span>
+                                            @endif
                                             <span class="block whitespace-wrap px-1">{{ $snoozed_chore->description }}</span>
                                             <span class="px-1"><span class="font-semibold">Snoozed until:</span> {{ \Carbon\Carbon::parse($snoozed_chore->snoozed_until)->format('m/d/y h:i a') }}</span>
                                         </span>

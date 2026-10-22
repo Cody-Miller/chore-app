@@ -3,6 +3,7 @@
     <span class="block">
         <a class="text-lg font-bold dark:text-indigo-500 block mb-1" href="/pills/{{ $pill->slug }}">
             {{ $pill->name }}
+            <x-pill-inactive-badge :pill="$pill" class="ml-1" />
         </a>
         <span class="block whitespace-wrap px-1">{{ $pill->description }}</span>
         <span class="px-1"><span class="font-semibold">Pet:</span> <a href="/pets/{{ $pill->pet->slug }}" class="text-indigo-600 dark:text-indigo-400">{{ $pill->pet->name }}</a></span>

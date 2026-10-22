@@ -44,6 +44,17 @@ class StoreChoreRequest extends FormRequest
                 'nullable',
                 'integer',
                 Rule::exists('users', 'id')
+            ],
+            'tags' => [
+                'nullable',
+                'array',
+                'max:10'
+            ],
+            'tags.*' => [
+                'nullable',
+                'string',
+                'max:50',
+                'distinct:ignore_case'
             ]
         ];
     }

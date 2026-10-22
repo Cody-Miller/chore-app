@@ -6,6 +6,7 @@
         <input type="hidden" name="redirect_to" value="{{ $redirectTo ?? url()->current() }}">
         @if($includeTab)
             <input type="hidden" name="tab" x-bind:value="currentTab">
+            <input type="hidden" name="anchor" x-bind:value="choreAnchor">
         @endif
         <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
             Are you sure you want to Complete this chore?

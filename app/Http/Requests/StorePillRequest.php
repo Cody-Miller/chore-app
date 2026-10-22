@@ -43,6 +43,9 @@ class StorePillRequest extends FormRequest
             'scheduled_times.*' => [
                 'required',
                 'date_format:H:i'
+            ],
+            'is_active' => [
+                'boolean'
             ]
         ];
     }

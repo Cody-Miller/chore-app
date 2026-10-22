@@ -11,7 +11,7 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <div class="mb-6">
-                        <h3 class="text-2xl font-bold mb-2">{{ $pill->name }}</h3>
+                        <h3 class="text-2xl font-bold mb-2">{{ $pill->name }} <x-pill-inactive-badge :pill="$pill" /></h3>
                         <p><span class="font-semibold">Pet:</span> <a href="/pets/{{ $pill->pet->slug }}" class="text-indigo-600 dark:text-indigo-400">{{ $pill->pet->name }}</a></p>
                         <p><span class="font-semibold">Dosage:</span> {{ $pill->dosage }}</p>
                         @if($pill->description)

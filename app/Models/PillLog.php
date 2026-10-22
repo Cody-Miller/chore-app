@@ -78,7 +78,7 @@ class PillLog extends Model
      */
     public static function getMissedDosesByPill($startDate, $endDate)
     {
-        $pills = Pill::whereNull('deleted_at')->with('pet')->get();
+        $pills = Pill::whereNull('deleted_at')->active()->with('pet')->get();
         $results = [];
 
         $period = CarbonPeriod::create($startDate, $endDate);

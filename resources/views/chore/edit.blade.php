@@ -1,4 +1,4 @@
-@props(['due-now-chores' => null, 'choreMonth' => 0, 'choreDay' => 4, 'users' => []])
+@props(['due-now-chores' => null, 'choreMonth' => 0, 'choreDay' => 4, 'users' => [], 'allTags' => collect()])
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -27,6 +27,7 @@
                                 </x-form.select-input-option>
                             @endforeach
                         </x-form.select-input>
+                        <x-form.tag-input :all-tags="$allTags" :selected="$chore->tags->pluck('name')->all()">{{ __('Tags:') }}</x-form.tag-input>
                         <div
                             class="flex flex-wrap justify-between"
                             x-data="{

@@ -67,6 +67,17 @@
                             </button>
                         </div>
 
+                        <div class="mb-4">
+                            <input type="hidden" name="is_active" value="0">
+                            <label for="is_active" class="inline-flex items-center cursor-pointer gap-3">
+                                <input id="is_active" type="checkbox" name="is_active" value="1" class="sr-only peer" @checked(old('is_active', true))>
+                                <span class="relative w-14 h-8 bg-gray-300 dark:bg-gray-700 rounded-full peer-focus:ring-2 peer-focus:ring-indigo-500 peer-checked:bg-indigo-500 after:content-[''] after:absolute after:top-1 after:start-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:shadow after:transition-all peer-checked:after:translate-x-6"></span>
+                                <span class="font-medium text-gray-700 dark:text-gray-300 peer-checked:hidden">{{ __('Inactive') }}</span>
+                                <span class="font-medium text-gray-700 dark:text-gray-300 hidden peer-checked:inline">{{ __('Active') }}</span>
+                            </label>
+                            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ __('Inactive medications are hidden from the dashboard and the missed doses chart.') }}</p>
+                        </div>
+
                         <div class="flex flex-col sm:flex-row sm:justify-between gap-3 mt-6">
                             <x-buttons.cancel-link-button href="/pills" class="w-full sm:w-auto">
                                 {{ __('Cancel') }}

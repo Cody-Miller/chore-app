@@ -5,16 +5,36 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreChoreRequest;
 use App\Http\Requests\UpdateChoreRequest;
 use App\Models\Chore;
+use App\Models\Tag;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ChoreController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $occurrence = $request->query('occurrence');
+        $assigned = $request->query('assigned');
+        $tag = $request->query('tag');
+
+        $chores = Chore::with(['assignedUser', 'tags'])
+            ->when($occurrence === 'recurring', fn ($q) => $q->where('occurrence_hours', '>', 0))
+            ->when($occurrence === 'one-time', fn ($q) => $q->where('occurrence_hours', 0))
+            ->when($assigned === 'everyone', fn ($q) => $q->whereNull('assigned_user_id'))
+            ->when($assigned === 'assigned', fn ($q) => $q->whereNotNull('assigned_user_id'))
+            ->when(ctype_digit((string) $assigned), fn ($q) => $q->where('assigned_user_id', $assigned))
+            ->when($tag, fn ($q) => $q->whereHas('tags', fn ($t) => $t->where('name', $tag)))
+            ->latest()
+            ->paginate(50)
+            ->withQueryString();
+
         return view('chore.index', [
-            'chores' => Chore::with('assignedUser')->latest()->paginate(50),
+            'chores' => $chores,
+            'users' => User::select('id', 'name')->orderBy('name')->get(),
+            'tags' => Tag::whereHas('chores')->orderBy('name')->get(),
+            'filters' => ['occurrence' => $occurrence, 'assigned' => $assigned, 'tag' => $tag],
         ]);
     }
 
@@ -22,6 +42,7 @@ class ChoreController extends Controller
     {
         return view('chore.create', [
             'users' => User::select('id', 'name')->orderBy('name')->get(),
+            'allTags' => Tag::orderBy('name')->get(['name', 'color']),
         ]);
     }
 
@@ -38,7 +59,7 @@ class ChoreController extends Controller
         }
         // Convert our occurrence to hours
         $hours = ($request->occurDay * 24) + ($request->occurMonth * 720);
-        Chore::create([
+        $chore = Chore::create([
             'name' => $request->name,
             'slug' => $slug,
             'description' => $request->desc,
@@ -46,6 +67,7 @@ class ChoreController extends Controller
             'occurrence_hours' => $hours,
             'assigned_user_id' => $request->assigned_user_id ?: null,
         ]);
+        $chore->tags()->sync(Tag::findOrCreateByNames($request->input('tags', []))->pluck('id'));
 
         return redirect()->route('chores.index');
     }
@@ -53,7 +75,7 @@ class ChoreController extends Controller
     public function show(Chore $chore)
     {
         return view('chore.show', [
-            'chore' => $chore->load('assignedUser'),
+            'chore' => $chore->load(['assignedUser', 'tags']),
             'users' => User::select('id', 'name')->get(),
         ]);
     }
@@ -65,10 +87,11 @@ class ChoreController extends Controller
         $choreDay = floor($chore->occurrence_hours / 24);
 
         return view('chore.edit', [
-            'chore' => $chore,
+            'chore' => $chore->load('tags'),
             'choreMonth' => $choreMonth,
             'choreDay' => $choreDay,
             'users' => User::select('id', 'name')->orderBy('name')->get(),
+            'allTags' => Tag::orderBy('name')->get(['name', 'color']),
         ]);
     }
 
@@ -93,6 +116,7 @@ class ChoreController extends Controller
         $chore->occurrence_hours = $hours;
         $chore->assigned_user_id = $request->assigned_user_id ?: null;
         $chore->save();
+        $chore->tags()->sync(Tag::findOrCreateByNames($request->input('tags', []))->pluck('id'));
 
         return redirect()->route('chores.index');
     }

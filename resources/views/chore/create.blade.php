@@ -27,6 +27,7 @@
                                 </x-form.select-input-option>
                             @endforeach
                         </x-form.select-input>
+                        <x-form.tag-input :all-tags="$allTags">{{ __('Tags:') }}</x-form.tag-input>
                         <div
                             class="flex flex-wrap justify-between"
                             x-data="{

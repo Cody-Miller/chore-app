@@ -63,12 +63,16 @@ class ChoreLogController extends Controller
         // Redirect back to the same page the user was on
         $redirectTo = $request->input('redirect_to');
         $tab = $request->input('tab');
+        $anchor = $request->input('anchor');
         $successMessage = "Chore '{$chore->name}' completed!";
 
         if ($redirectTo) {
             $url = $redirectTo;
             if ($tab) {
                 $url .= (str_contains($url, '?') ? '&' : '?').'tab='.$tab;
+            }
+            if ($anchor && preg_match('/^[A-Za-z0-9_-]+$/', $anchor)) {
+                $url .= '#'.$anchor;
             }
 
             return redirect($url)

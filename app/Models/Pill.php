@@ -18,10 +18,12 @@ class Pill extends Model
         'description',
         'dosage',
         'scheduled_times',
+        'is_active',
     ];
 
     protected $casts = [
         'scheduled_times' => 'array',
+        'is_active' => 'boolean',
     ];
 
     /**
@@ -30,6 +32,14 @@ class Pill extends Model
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+
+    /**
+     * Scope a query to only include active pills.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 
     /**
@@ -59,6 +69,7 @@ class Pill extends Model
         $effectiveDayEnd = static::getEffectiveDayEnd();
 
         return static::whereNull('deleted_at')
+            ->active()
             ->with('pet')
             ->get()
             ->filter(function ($pill) use ($currentTime, $effectiveDayStart, $effectiveDayEnd) {
@@ -93,6 +104,7 @@ class Pill extends Model
         $effectiveDayEnd = static::getEffectiveDayEnd();
 
         return static::whereNull('deleted_at')
+            ->active()
             ->with('pet')
             ->get()
             ->filter(function ($pill) use ($currentTime, $effectiveDayStart, $effectiveDayEnd) {
@@ -123,6 +135,7 @@ class Pill extends Model
         $effectiveDayEnd = static::getEffectiveDayEnd();
 
         return static::whereNull('deleted_at')
+            ->active()
             ->with('pet')
             ->whereHas('pillLogs', function ($query) use ($effectiveDayStart, $effectiveDayEnd) {
                 $query->where('administered_at', '>=', $effectiveDayStart)

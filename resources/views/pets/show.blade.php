@@ -52,6 +52,7 @@
                             @foreach($pills as $pill)
                                 <li class="border border-gray-300 dark:border-gray-700 rounded-lg p-4">
                                     <a href="/pills/{{ $pill->slug }}" class="text-lg font-bold dark:text-indigo-500">{{ $pill->name }}</a>
+                                    <x-pill-inactive-badge :pill="$pill" class="ml-1" />
                                     <p class="text-sm text-gray-600 dark:text-gray-400">{{ $pill->description }}</p>
                                     <p class="text-sm"><span class="font-semibold">Dosage:</span> {{ $pill->dosage }}</p>
                                     <p class="text-sm">

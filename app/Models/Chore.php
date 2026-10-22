@@ -30,7 +30,7 @@ class Chore extends Model
     public static function getDue($userId = null, $showAll = true)
     {
         $query = self::select('chores.*')
-            ->with('assignedUser')
+            ->with(['assignedUser', 'tags'])
             ->leftJoin('chore_logs', function ($join) {
                 $join->on('chores.id', '=', 'chore_logs.chore_id')
                     ->whereNull('chore_logs.deleted_at');
@@ -60,7 +60,7 @@ class Chore extends Model
     public static function getUpcoming($userId = null, $showAll = true)
     {
         $query = self::select('chores.*')
-            ->with('assignedUser')
+            ->with(['assignedUser', 'tags'])
             ->leftJoin('chore_logs', function ($join) {
                 $join->on('chores.id', '=', 'chore_logs.chore_id')
                     ->whereNull('chore_logs.deleted_at');
@@ -89,7 +89,7 @@ class Chore extends Model
 
     public static function getOneTime($userId = null, $showAll = true)
     {
-        $query = self::with('assignedUser')->where('occurrence_hours', 0);
+        $query = self::with(['assignedUser', 'tags'])->where('occurrence_hours', 0);
 
         // Filter out globally snoozed chores
         $query->whereDoesntHave('snoozes', function ($q) {
@@ -121,6 +121,11 @@ class Chore extends Model
     public function snoozes()
     {
         return $this->hasMany(ChoreSnooze::class);
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class)->orderBy('name');
     }
 
     public function assignedUser()

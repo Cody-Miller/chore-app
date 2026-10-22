@@ -1,9 +1,19 @@
-@props(['chore' => null, 'quick_complete' => false])
+@props(['chore' => null, 'quick_complete' => false, 'anchor' => null])
+@php
+    $completeData = $anchor ? "'{$anchor}'" : null;
+@endphp
 <div class="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <span class="block">
         <a class="text-lg font-bold dark:text-indigo-500 block mb-1" href="/chores/{{ $chore->slug }}">
             {{ $chore->name }}
         </a>
+        @if($chore->tags->isNotEmpty())
+            <span class="flex flex-wrap gap-1 mb-1 px-1">
+                @foreach($chore->tags as $tag)
+                    <x-tag-badge :tag="$tag"/>
+                @endforeach
+            </span>
+        @endif
         <span class="block whitespace-wrap px-1">{{ $chore->description }}</span>
         <span class="px-1"><span class="font-semibold">Weight</span>: {{ $chore->weight }}</span>
         <span class="px-1">
@@ -28,7 +38,7 @@
             <x-buttons.snooze-button :slug="$chore->slug" class="w-full sm:w-auto">
                 Snooze
             </x-buttons.snooze-button>
-            <x-modal.button class="w-full sm:w-auto" variant="primary" name="complete_chore" :slug="$chore->slug">
+            <x-modal.button class="w-full sm:w-auto" variant="primary" name="complete_chore" :slug="$chore->slug" :data="$completeData">
                 Complete
             </x-modal.button>
         </div>

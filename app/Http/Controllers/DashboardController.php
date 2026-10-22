@@ -43,6 +43,7 @@ class DashboardController extends Controller
     private function getSnoozedChores()
     {
         return Chore::select('chores.*', \DB::raw('MAX(chore_snoozes.snoozed_until) as snoozed_until'))
+            ->with('tags')
             ->join('chore_snoozes', 'chores.id', '=', 'chore_snoozes.chore_id')
             ->where('chore_snoozes.snoozed_until', '>', now())
             ->whereNull('chores.deleted_at')

@@ -16,7 +16,7 @@ class PillController extends Controller
     public function index()
     {
         return view('pills.index', [
-            'pills' => Pill::with('pet')->latest()->paginate(50)
+            'pills' => Pill::with('pet')->orderByDesc('is_active')->latest()->paginate(50)
         ]);
     }
 
@@ -46,6 +46,7 @@ class PillController extends Controller
             'description' => $request->description,
             'dosage' => $request->dosage,
             'scheduled_times' => $request->scheduled_times,
+            'is_active' => $request->boolean('is_active', true),
         ]);
 
         return redirect()->route('pills.index');
@@ -86,6 +87,7 @@ class PillController extends Controller
         $pill->description = $request->description;
         $pill->dosage = $request->dosage;
         $pill->scheduled_times = $request->scheduled_times;
+        $pill->is_active = $request->boolean('is_active');
         $pill->save();
 
         return redirect()->route('pills.index');
