@@ -9,21 +9,34 @@ use App\Http\Requests\StorePillRequest;
 use App\Http\Requests\UpdatePillRequest;
 use App\Models\Pill;
 use App\Models\Pet;
+use App\Models\Tag;
 use App\Models\User;
 
 class PillController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $tag = $request->query('tag');
+
+        $pills = Pill::with(['pet', 'tags'])
+            ->when($tag, fn ($q) => $q->whereHas('tags', fn ($t) => $t->where('name', $tag)))
+            ->orderByDesc('is_active')
+            ->latest()
+            ->paginate(50)
+            ->withQueryString();
+
         return view('pills.index', [
-            'pills' => Pill::with('pet')->latest()->paginate(50)
+            'pills' => $pills,
+            'tags' => Tag::whereHas('pills')->orderBy('name')->get(),
+            'filters' => ['tag' => $tag],
         ]);
     }
 
     public function create()
     {
         return view('pills.create', [
-            'pets' => Pet::orderBy('name')->get()
+            'pets' => Pet::orderBy('name')->get(),
+            'allTags' => Pill::tagOptions(),
         ]);
     }
 
@@ -39,14 +52,16 @@ class PillController extends Controller
             throw ValidationException::withMessages(['name' => 'Name is too close to another name already in use.']);
         }
 
-        Pill::create([
+        $pill = Pill::create([
             'pet_id' => $request->pet_id,
             'name' => $request->name,
             'slug' => $slug,
             'description' => $request->description,
             'dosage' => $request->dosage,
             'scheduled_times' => $request->scheduled_times,
+            'is_active' => $request->boolean('is_active', true),
         ]);
+        $pill->syncTagNames($request->input('tags', []));
 
         return redirect()->route('pills.index');
     }
@@ -54,7 +69,7 @@ class PillController extends Controller
     public function show(Pill $pill)
     {
         return view('pills.show', [
-            'pill' => $pill,
+            'pill' => $pill->load('tags'),
             'users' => User::select('id', 'name')->get(),
         ]);
     }
@@ -62,8 +77,9 @@ class PillController extends Controller
     public function edit(Pill $pill)
     {
         return view('pills.edit', [
-            'pill' => $pill,
-            'pets' => Pet::orderBy('name')->get()
+            'pill' => $pill->load('tags'),
+            'pets' => Pet::orderBy('name')->get(),
+            'allTags' => Pill::tagOptions(),
         ]);
     }
 
@@ -86,7 +102,9 @@ class PillController extends Controller
         $pill->description = $request->description;
         $pill->dosage = $request->dosage;
         $pill->scheduled_times = $request->scheduled_times;
+        $pill->is_active = $request->boolean('is_active');
         $pill->save();
+        $pill->syncTagNames($request->input('tags', []));
 
         return redirect()->route('pills.index');
     }

@@ -1,4 +1,4 @@
-@props(['pill' => null, 'pets' => null])
+@props(['pill' => null, 'pets' => null, 'allTags' => collect()])
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -32,7 +32,9 @@
 
                         <x-form.textarea name='description' :default="$pill->description" placeholder="{{ __('Description/Instructions') }}"></x-form.textarea>
 
-                        <div class="mb-4">
+                        <x-form.tag-input :all-tags="$allTags" :selected="$pill->tags->pluck('name')->all()">{{ __('Tags:') }}</x-form.tag-input>
+
+                        <div class="mt-6 mb-4">
                             <label class="block font-medium text-sm text-gray-700 dark:text-gray-300 mb-2">
                                 Scheduled Times:
                             </label>
@@ -64,11 +66,22 @@
                             </button>
                         </div>
 
+                        <div class="mb-4">
+                            <input type="hidden" name="is_active" value="0">
+                            <label for="is_active" class="inline-flex items-center cursor-pointer gap-3">
+                                <input id="is_active" type="checkbox" name="is_active" value="1" class="sr-only peer" @checked(old('is_active', $pill->is_active))>
+                                <span class="relative w-14 h-8 bg-gray-300 dark:bg-gray-700 rounded-full peer-focus:ring-2 peer-focus:ring-indigo-500 peer-checked:bg-indigo-500 after:content-[''] after:absolute after:top-1 after:start-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:shadow after:transition-all peer-checked:after:translate-x-6"></span>
+                                <span class="font-medium text-gray-700 dark:text-gray-300 peer-checked:hidden">{{ __('Inactive') }}</span>
+                                <span class="font-medium text-gray-700 dark:text-gray-300 hidden peer-checked:inline">{{ __('Active') }}</span>
+                            </label>
+                            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ __('Inactive medications are hidden from the dashboard and the missed doses chart.') }}</p>
+                        </div>
+
                         <div class="flex flex-col sm:flex-row sm:justify-between gap-3 mt-6">
                             <div class="flex flex-col sm:flex-row gap-3">
-                                <a href="/pills" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-25 transition ease-in-out duration-150">
+                                <x-buttons.cancel-link-button href="/pills" class="w-full sm:w-auto">
                                     {{ __('Cancel') }}
-                                </a>
+                                </x-buttons.cancel-link-button>
                                 <x-modal.button name="deletepill" class="w-full sm:w-auto">
                                     {{ __('Delete Medication') }}
                                 </x-modal.button>

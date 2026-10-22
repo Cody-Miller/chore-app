@@ -16,7 +16,7 @@ $classes =  'inline-flex
             dark:focus:outline-none';
 if ($active ?? false) {
     // Active
-    $classes .= 'border-indigo-400
+    $classes .= ' border-indigo-400
                 text-slate-900
                 focus:border-indigo-700
                 dark:text-indigo-500
@@ -25,7 +25,7 @@ if ($active ?? false) {
                 dark:focus:border-indigo-400';
 } else {
     // Inactive
-    $classes .= 'border-transparent
+    $classes .= ' border-transparent
                 text-slate-300
                 hover:text-slate-700
                 hover:border-indigo-400

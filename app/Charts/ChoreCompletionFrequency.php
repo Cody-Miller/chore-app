@@ -3,7 +3,7 @@
 namespace App\Charts;
 
 use App\Models\ChoreLog;
-use ArielMejiaDev\LarapexCharts\BarChart;
+use ArielMejiaDev\LarapexCharts\HorizontalBar;
 use ArielMejiaDev\LarapexCharts\LarapexChart;
 
 class ChoreCompletionFrequency extends Charts
@@ -15,7 +15,7 @@ class ChoreCompletionFrequency extends Charts
         $this->chart = $chart;
     }
 
-    public function build($startDate, $endDate): BarChart
+    public function build($startDate, $endDate): HorizontalBar
     {
         $records = ChoreLog::getChoreCompletionCounts($startDate, $endDate);
 
@@ -31,7 +31,7 @@ class ChoreCompletionFrequency extends Charts
             $completionCounts[] = $record->completion_count;
         }
 
-        return $this->chart->barChart()
+        return $this->chart->horizontalBarChart()
             ->setTitle('Most Frequently Completed Chores')
             ->setSubtitle('Top 10 chores by number of completions in the selected period.')
             ->setXAxis($choreNames)

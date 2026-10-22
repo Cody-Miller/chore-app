@@ -3,7 +3,7 @@
 @if(session('success') || session('error') || session('info'))
 <div
     x-data="{ show: true }"
-    x-init="setTimeout(() => show = false, 4000)"
+    x-init="setTimeout(() => show = false, 8000)"
     x-show="show"
     x-transition:enter="transition ease-out duration-300"
     x-transition:enter-start="opacity-0 translate-y-2"
@@ -19,6 +19,16 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
         </svg>
         <span>{{ session('success') }}</span>
+        @if(session('success_action_url'))
+        <a href="{{ session('success_action_url') }}" class="ml-2 px-2 py-1 text-sm font-semibold rounded bg-white/20 hover:bg-white/30">
+            View
+        </a>
+        @endif
+        @if(session('success_edit_url'))
+        <a href="{{ session('success_edit_url') }}" class="px-2 py-1 text-sm font-semibold rounded bg-white/20 hover:bg-white/30">
+            Edit time
+        </a>
+        @endif
         <button @click="show = false" class="ml-2 hover:opacity-75">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

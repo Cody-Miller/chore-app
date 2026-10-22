@@ -37,6 +37,9 @@
                             @endif
                         </div>
                         <div class="flex flex-col sm:flex-row sm:justify-between gap-3">
+                            <x-modal.button name="deletechore" class="w-full sm:w-auto">
+                                Delete Chore
+                            </x-modal.button>
                             <div class="flex flex-col sm:flex-row gap-3">
                                 <x-buttons.primary-link-button
                                     href="/chores/{{ $chore->slug }}/edit"
@@ -44,12 +47,7 @@
                                 >
                                     Edit Chore
                                 </x-buttons.primary-link-button>
-                                <x-modal.button name="deletechore" class="w-full sm:w-auto">
-                                    Delete Chore
-                                </x-modal.button>
-                            </div>
-                            <div class="flex flex-col sm:flex-row sm:justify-end">
-                                <x-modal.button name="complete_chore" class="w-full sm:w-auto whitespace-nowrap dark:bg-thunder-200">
+                                <x-modal.button name="complete_chore" variant="primary" class="w-full sm:w-auto whitespace-nowrap">
                                     Complete Chore
                                 </x-modal.button>
                             </div>

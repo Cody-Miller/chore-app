@@ -1,4 +1,4 @@
-@props(['due_now_chores' => null, 'upcoming_chores' => null, 'one_time_chores' => null, 'snoozed_chores' => null, 'users' => null])
+@props(['due_now_chores' => null, 'upcoming_chores' => null, 'one_time_chores' => null, 'snoozed_chores' => null, 'users' => null, 'show_all_chores' => false])
 
 <x-app-layout>
     <x-slot name="header">
@@ -6,7 +6,7 @@
             {{ __('Chore Dashboard') }}
         </h2>
     </x-slot>
-    <div class="pb-12" x-data="{ choreId: '', currentTab: parseInt(new URLSearchParams(window.location.search).get('tab')) || 1 }" @tab-changed.window="currentTab = $event.detail">
+    <div class="pb-12" x-data="{ choreId: '', choreAnchor: '', currentTab: parseInt(new URLSearchParams(window.location.search).get('tab')) || 1 }" @tab-changed.window="currentTab = $event.detail" @open-modal.window="choreAnchor = $event.detail[2] || ''">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="p-6 text-gray-900 dark:text-gray-100">
                 <h5>Don't be bored... Bee Chored</h5>
@@ -14,19 +14,28 @@
             </div>
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-4 text-gray-900 dark:text-gray-100">
+                    <form method="POST" action="{{ route('dashboard.toggle-show-all') }}" class="flex justify-end mb-4">
+                        @csrf
+                        <input type="hidden" name="tab" x-bind:value="currentTab">
+                        <label class="inline-flex items-center cursor-pointer gap-3">
+                            <span class="text-sm font-semibold">{{ __('Show all chores') }}</span>
+                            <input type="checkbox" class="sr-only peer" onchange="this.form.submit()" @checked($show_all_chores)>
+                            <span class="relative w-11 h-6 bg-gray-300 dark:bg-gray-700 rounded-full peer-focus:ring-2 peer-focus:ring-indigo-500 peer-checked:bg-indigo-500 after:content-[''] after:absolute after:top-0.5 after:start-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></span>
+                        </label>
+                    </form>
                     <x-tab.wrapper defaultTabNumber="1">
                         <x-tab.group>
                             <x-tab.link tabNumber="1">
                                 {{ __('Due Now') }}
+                                <span class="hidden sm:inline ml-1 text-xs opacity-75">({{ count($due_now_chores ?? []) }} / {{ count($upcoming_chores ?? []) }})</span>
                             </x-tab.link>
                             <x-tab.link tabNumber="2">
-                                {{ __('Upcoming') }}
+                                {{ __('Non-Reoccuring') }}
+                                <span class="hidden sm:inline ml-1 text-xs opacity-75">({{ count($one_time_chores ?? []) }})</span>
                             </x-tab.link>
                             <x-tab.link tabNumber="3">
-                                {{ __('Non-Reoccuring') }}
-                            </x-tab.link>
-                            <x-tab.link tabNumber="4">
                                 {{ __('Snoozed') }}
+                                <span class="hidden sm:inline ml-1 text-xs opacity-75">({{ count($snoozed_chores ?? []) }})</span>
                             </x-tab.link>
                         </x-tab.group>
                         <x-tab.content tabNumber="1">
@@ -37,17 +46,18 @@
                             @else
                                 <p>No chores do right now nice job! 😎</p>
                             @endif
+                            <div id="upcoming" class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 scroll-mt-4">
+                                <h3 class="font-semibold text-indigo-400 mb-2">{{ __('Upcoming') }}</h3>
+                                @if($upcoming_chores && count($upcoming_chores))
+                                    @foreach($upcoming_chores as $upcoming_chore)
+                                        <x-chore-display quick_complete="true" :chore="$upcoming_chore" anchor="upcoming"/>
+                                    @endforeach
+                                @else
+                                    <p>No upcoming chores, that's a shocker! ⚡</p>
+                                @endif
+                            </div>
                         </x-tab.content>
                         <x-tab.content tabNumber="2">
-                            @if($upcoming_chores && count($upcoming_chores))
-                                @foreach($upcoming_chores as $upcoming_chore)
-                                    <x-chore-display quick_complete="true" :chore="$upcoming_chore"/>
-                                @endforeach
-                            @else
-                                <p>No upcoming chores, that's a shocker! ⚡</p>
-                            @endif
-                        </x-tab.content>
-                        <x-tab.content tabNumber="3">
                             @if($one_time_chores && count($one_time_chores))
                                 @foreach($one_time_chores as $one_time_chore)
                                     <x-chore-display quick_complete="true" :chore="$one_time_chore"/>
@@ -56,7 +66,7 @@
                                 <p>No one time chores for once...</p>
                             @endif
                         </x-tab.content>
-                        <x-tab.content tabNumber="4">
+                        <x-tab.content tabNumber="3">
                             @if($snoozed_chores && count($snoozed_chores))
                                 @foreach($snoozed_chores as $snoozed_chore)
                                     <div class="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -66,6 +76,7 @@
                                             </a>
                                             <span class="block whitespace-wrap px-1">{{ $snoozed_chore->description }}</span>
                                             <span class="px-1"><span class="font-semibold">Snoozed until:</span> {{ \Carbon\Carbon::parse($snoozed_chore->snoozed_until)->format('m/d/y h:i a') }}</span>
+                                            <x-tag-list :tags="$snoozed_chore->tags" class="mt-1 px-1"/>
                                         </span>
                                         <form method="POST" action="{{ route('chores.unsnooze', $snoozed_chore->slug) }}" class="sm:ml-8">
                                             @csrf

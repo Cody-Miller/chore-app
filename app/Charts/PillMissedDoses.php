@@ -65,7 +65,8 @@ class PillMissedDoses extends Charts
         $chart = $this->chart->barChart()
             ->setTitle('Missed Doses by Medication')
             ->setSubtitle("Scheduled doses that were not administered: {$dateRange}")
-            ->setXAxis($dateLabels);
+            ->setXAxis($dateLabels)
+            ->setStacked(true);
 
         foreach ($pillDatesStruct as $pillName => $missedCounts) {
             $chart->addData(array_values($missedCounts), $pillName);

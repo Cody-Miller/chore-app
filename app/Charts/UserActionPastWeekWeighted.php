@@ -43,9 +43,10 @@ class UserActionPastWeekWeighted extends Charts
         }
         $dateRange = $startDate->format('M d') . ' - ' . $endDate->format('M d, Y');
         $chart = $this->chart->barChart()
-            ->setTitle('Week Weighted')
+            ->setTitle('Day Weighted')
             ->setSubtitle("Total weight from chores completed: {$dateRange}")
-            ->setXAxis(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
+            ->setXAxis(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
+            ->setStacked(true);
         foreach ($userDaysStruct as $userName => $userWeightCount) {
             $chart->addData($userWeightCount, $userName);
         }

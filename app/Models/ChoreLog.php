@@ -74,7 +74,7 @@ class ChoreLog extends Model
             ->join('chores', 'chores.id', '=', 'chore_logs.chore_id')
             ->whereBetween('chore_logs.completed_at', [$startDate, $endDate])
             ->whereNull('chores.deleted_at')
-            ->selectRaw('chores.name, COUNT(*) AS completion_count')
+            ->selectRaw('chores.name, COUNT(DISTINCT COALESCE(chore_logs.split_group_id, chore_logs.id)) AS completion_count')
             ->groupBy('chores.id', 'chores.name')
             ->orderByDesc('completion_count')
             ->limit(10)
@@ -85,11 +85,16 @@ class ChoreLog extends Model
      * Get chores with completion rate vs expected (based on occurrence_hours)
      * Shows chores that are not being completed as frequently as they should
      * Includes all recurring chores even if they have no completions
-     * Excludes snoozed chores
+     * Expected completions only count from when the chore was created
+     * Split completions count once, snoozed chores and on-track chores are excluded
      */
     public static function getChoreCompletionRates($startDate, $endDate)
     {
-        $daysDiff = $startDate->diffInDays($endDate);
+        // Don't expect completions for time that hasn't happened yet
+        $endDate = $endDate->copy()->min(now());
+        $start = $startDate->format('Y-m-d H:i:s');
+        $end = $endDate->format('Y-m-d H:i:s');
+        $expected = 'FLOOR(TIMESTAMPDIFF(HOUR, GREATEST(?, chores.created_at), ?) / chores.occurrence_hours)';
 
         return \DB::table('chores')
             ->leftJoin('chore_logs', function($join) use ($startDate, $endDate) {
@@ -97,22 +102,23 @@ class ChoreLog extends Model
                     ->whereBetween('chore_logs.completed_at', [$startDate, $endDate])
                     ->whereNull('chore_logs.deleted_at');
             })
-            ->leftJoin('chore_snoozes', function($join) {
-                $join->on('chores.id', '=', 'chore_snoozes.chore_id')
+            ->whereNull('chores.deleted_at')
+            ->whereNotExists(function ($q) {
+                $q->select(\DB::raw(1))
+                    ->from('chore_snoozes')
+                    ->whereColumn('chore_snoozes.chore_id', 'chores.id')
                     ->where('chore_snoozes.snoozed_until', '>', now());
             })
-            ->whereNull('chores.deleted_at')
-            ->whereNull('chore_snoozes.id') // Exclude snoozed chores
             ->where('chores.occurrence_hours', '>', 0) // Only recurring chores
-            ->selectRaw('
+            ->selectRaw("
                 chores.name,
                 chores.occurrence_hours,
-                COUNT(chore_logs.id) AS actual_completions,
-                FLOOR(? / (chores.occurrence_hours / 24)) AS expected_completions,
-                (COUNT(chore_logs.id) / FLOOR(? / (chores.occurrence_hours / 24)) * 100) AS completion_rate
-            ', [$daysDiff, $daysDiff])
-            ->groupBy('chores.id', 'chores.name', 'chores.occurrence_hours')
-            ->havingRaw('FLOOR(? / (chores.occurrence_hours / 24)) > 0', [$daysDiff])
+                COUNT(DISTINCT COALESCE(chore_logs.split_group_id, chore_logs.id)) AS actual_completions,
+                {$expected} AS expected_completions,
+                (COUNT(DISTINCT COALESCE(chore_logs.split_group_id, chore_logs.id)) / {$expected} * 100) AS completion_rate
+            ", [$start, $end, $start, $end])
+            ->groupBy('chores.id', 'chores.name', 'chores.occurrence_hours', 'chores.created_at')
+            ->havingRaw('expected_completions > 0 AND completion_rate < 100')
             ->orderBy('completion_rate', 'asc')
             ->limit(10)
             ->get();

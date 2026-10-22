@@ -57,7 +57,7 @@ class PetController extends Controller
     {
         return view('pets.show', [
             'pet' => $pet,
-            'pills' => $pet->pills()->with('pillLogs')->get(),
+            'pills' => $pet->pills()->with(['pillLogs', 'tags'])->get(),
         ]);
     }
 

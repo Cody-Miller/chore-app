@@ -11,7 +11,7 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <div class="mb-6">
-                        <h3 class="text-2xl font-bold mb-2">{{ $pill->name }}</h3>
+                        <h3 class="text-2xl font-bold mb-2">{{ $pill->name }} <x-pill-inactive-badge :pill="$pill" /></h3>
                         <p><span class="font-semibold">Pet:</span> <a href="/pets/{{ $pill->pet->slug }}" class="text-indigo-600 dark:text-indigo-400">{{ $pill->pet->name }}</a></p>
                         <p><span class="font-semibold">Dosage:</span> {{ $pill->dosage }}</p>
                         @if($pill->description)
@@ -27,6 +27,7 @@
                                 @endif
                             @endforeach
                         </p>
+                        <x-tag-list :tags="$pill->tags" class="mt-2"/>
 
                         <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 mt-4">
                             <x-buttons.primary-link-button href="/pills/{{ $pill->slug }}/edit" class="w-full sm:w-auto">
@@ -35,7 +36,8 @@
                             @foreach($pill->scheduled_times as $time)
                                 @if(!$pill->hasBeenGivenAt($time))
                                     <x-modal.button
-                                        class="w-full sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-500 focus:ring-2 focus:ring-offset-2"
+                                        class="w-full sm:w-auto"
+                                        variant="primary"
                                         name="administer_pill"
                                         :slug="$pill->slug"
                                         :data="json_encode(['scheduledTime' => $time])"

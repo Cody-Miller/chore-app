@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Models\Traits\HasEffectiveDate;
+use App\Models\Traits\HasTags;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Pill extends Model
 {
-    use HasEffectiveDate, HasFactory, SoftDeletes;
+    use HasEffectiveDate, HasFactory, HasTags, SoftDeletes;
 
     protected $fillable = [
         'pet_id',
@@ -18,10 +19,12 @@ class Pill extends Model
         'description',
         'dosage',
         'scheduled_times',
+        'is_active',
     ];
 
     protected $casts = [
         'scheduled_times' => 'array',
+        'is_active' => 'boolean',
     ];
 
     /**
@@ -30,6 +33,14 @@ class Pill extends Model
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+
+    /**
+     * Scope a query to only include active pills.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 
     /**
@@ -59,7 +70,8 @@ class Pill extends Model
         $effectiveDayEnd = static::getEffectiveDayEnd();
 
         return static::whereNull('deleted_at')
-            ->with('pet')
+            ->active()
+            ->with(['pet', 'tags'])
             ->get()
             ->filter(function ($pill) use ($currentTime, $effectiveDayStart, $effectiveDayEnd) {
                 // Check if any scheduled time has passed today
@@ -93,7 +105,8 @@ class Pill extends Model
         $effectiveDayEnd = static::getEffectiveDayEnd();
 
         return static::whereNull('deleted_at')
-            ->with('pet')
+            ->active()
+            ->with(['pet', 'tags'])
             ->get()
             ->filter(function ($pill) use ($currentTime, $effectiveDayStart, $effectiveDayEnd) {
                 foreach ($pill->scheduled_times as $scheduledTime) {
@@ -123,7 +136,8 @@ class Pill extends Model
         $effectiveDayEnd = static::getEffectiveDayEnd();
 
         return static::whereNull('deleted_at')
-            ->with('pet')
+            ->active()
+            ->with(['pet', 'tags'])
             ->whereHas('pillLogs', function ($query) use ($effectiveDayStart, $effectiveDayEnd) {
                 $query->where('administered_at', '>=', $effectiveDayStart)
                     ->where('administered_at', '<=', $effectiveDayEnd);

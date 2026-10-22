@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesTags;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StorePillRequest extends FormRequest
 {
+    use ValidatesTags;
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -43,7 +46,11 @@ class StorePillRequest extends FormRequest
             'scheduled_times.*' => [
                 'required',
                 'date_format:H:i'
-            ]
+            ],
+            'is_active' => [
+                'boolean'
+            ],
+            ...$this->tagRules()
         ];
     }
 }

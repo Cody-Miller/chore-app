@@ -57,4 +57,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(ChoreSnooze::class);
     }
+
+    /**
+     * Get the chores assigned to the user.
+     */
+    public function assignedChores()
+    {
+        return $this->hasMany(Chore::class, 'assigned_user_id');
+    }
 }

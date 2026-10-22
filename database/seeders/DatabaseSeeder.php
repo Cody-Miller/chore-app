@@ -4,10 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use \Faker\Factory;
 use \App\Models\User;
-use \App\Models\Chore;
-use \App\Models\ChoreLog;
 
 class DatabaseSeeder extends Seeder
 {
@@ -21,29 +18,20 @@ class DatabaseSeeder extends Seeder
             ApiUserSeeder::class,
         ]);
 
-        $faker = Factory::create();
-
-        $user1 = User::factory()->create([
+        User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => '$2y$10$r/WVg9UQs3yBsvnwYeRjAe3eEHJAJSFOT1UF3/K.zr0PX8r2CKZbO', //test1234
         ]);
-        $user2 = User::factory()->create([
+        User::factory()->create([
             'name' => 'Other Test User',
             'email' => 'test2@example.com',
             'password' => '$2y$10$r/WVg9UQs3yBsvnwYeRjAe3eEHJAJSFOT1UF3/K.zr0PX8r2CKZbO', //test1234
         ]);
 
-        $chores = Chore::factory(35)->create();
-
-        for($actionCount = 0; $actionCount < 50; $actionCount++) {
-            ChoreLog::factory(15)->create([
-                'chore_id' => $chores[rand(1, 17)],
-                'user_id' => rand(1, 2),
-                'completed_at' => $faker->dateTimeBetween('-10 month', '+0 day')->format('Y-m-d H:m:s')
-            ]);
-        }
-
-
+        $this->call([
+            ChoreSeeder::class,
+            PetSeeder::class,
+        ]);
     }
 }

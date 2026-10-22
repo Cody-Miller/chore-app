@@ -1,4 +1,7 @@
-@props(['chore' => null, 'quick_complete' => false])
+@props(['chore' => null, 'quick_complete' => false, 'anchor' => null])
+@php
+    $completeData = $anchor ? "'{$anchor}'" : null;
+@endphp
 <div class="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <span class="block">
         <a class="text-lg font-bold dark:text-indigo-500 block mb-1" href="/chores/{{ $chore->slug }}">
@@ -16,18 +19,22 @@
                 @endif
             @endif
         </span>
+        @if($chore->assignedUser)
+            <span class="px-1"><span class="font-semibold">Assigned To:</span> {{ $chore->assignedUser->name }}</span>
+        @endif
         @if($chore->hasCompleted())
             <span class="px-1"><span class="font-semibold">Last Completed:</span> {{ $chore->getLastCompletedUser() }} - {{ $chore->getLastCompletedDate()->format('m/d/y h:i a') }}</span>
         @endif
+        <x-tag-list :tags="$chore->tags" class="mt-1 px-1"/>
     </span>
     @if($quick_complete)
         <div class="flex flex-col sm:flex-row gap-2 sm:ml-8 sm:whitespace-nowrap">
-            <x-modal.button class="w-full sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-500 focus:ring-2 focus:ring-offset-2" name="complete_chore" :slug="$chore->slug">
-                Complete
-            </x-modal.button>
             <x-buttons.snooze-button :slug="$chore->slug" class="w-full sm:w-auto">
                 Snooze
             </x-buttons.snooze-button>
+            <x-modal.button class="w-full sm:w-auto" variant="primary" name="complete_chore" :slug="$chore->slug" :data="$completeData">
+                Complete
+            </x-modal.button>
         </div>
     @endif
 </div>

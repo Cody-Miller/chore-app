@@ -45,7 +45,7 @@ class Pet extends Model
      */
     public function activePills()
     {
-        return $this->pills()->whereNull('deleted_at');
+        return $this->pills()->whereNull('deleted_at')->where('is_active', true);
     }
 
     /**

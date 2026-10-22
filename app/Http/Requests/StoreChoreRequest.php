@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesTags;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreChoreRequest extends FormRequest
 {
+    use ValidatesTags;
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -39,7 +42,13 @@ class StoreChoreRequest extends FormRequest
                 'required',
                 'integer',
                 'between:1,5'
-            ]
+            ],
+            'assigned_user_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id')
+            ],
+            ...$this->tagRules()
         ];
     }
 }
