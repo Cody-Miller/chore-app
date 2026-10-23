@@ -30,7 +30,7 @@
 
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
                                 @foreach($pets as $pet)
-                                    <div x-show="!search || '{{ strtolower($pet->name) }}'.includes(search.toLowerCase())" class="border border-gray-300 dark:border-gray-700 rounded-lg p-4">
+                                    <div x-show="!search || @js(mb_strtolower($pet->name)).includes(search.toLowerCase())" class="border border-gray-300 dark:border-gray-700 rounded-lg p-4">
                                         <div class="flex items-center gap-4">
                                             @if($pet->photo_path)
                                                 <img src="{{ asset('storage/' . $pet->photo_path) }}" alt="{{ $pet->name }}" class="w-20 h-20 rounded-full object-cover">

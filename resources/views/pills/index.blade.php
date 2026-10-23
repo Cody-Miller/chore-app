@@ -46,7 +46,7 @@
 
                             <ul class="mx-4">
                                 @foreach($pills as $pill)
-                                    <li x-show="!search || '{{ strtolower($pill->name) }}'.includes(search.toLowerCase()) || '{{ strtolower($pill->description) }}'.includes(search.toLowerCase()) || '{{ strtolower($pill->pet->name) }}'.includes(search.toLowerCase()) || @js($pill->tags->map(fn ($tag) => mb_strtolower($tag->name))).some(tag => tag.includes(search.toLowerCase()))">
+                                    <li x-show="!search || @js(mb_strtolower($pill->name)).includes(search.toLowerCase()) || @js(mb_strtolower($pill->description ?? '')).includes(search.toLowerCase()) || @js(mb_strtolower($pill->pet->name)).includes(search.toLowerCase()) || @js($pill->tags->map(fn ($tag) => mb_strtolower($tag->name))).some(tag => tag.includes(search.toLowerCase()))">
                                         <x-pill-display :pill="$pill"/>
                                     </li>
                                 @endforeach

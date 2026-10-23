@@ -62,7 +62,7 @@
 
                             <ul class="mx-4">
                                 @foreach($chores as $chore)
-                                    <li x-show="!search || '{{ strtolower($chore->name) }}'.includes(search.toLowerCase()) || '{{ strtolower($chore->description) }}'.includes(search.toLowerCase()) || @js($chore->tags->map(fn ($tag) => mb_strtolower($tag->name))).some(tag => tag.includes(search.toLowerCase()))">
+                                    <li x-show="!search || @js(mb_strtolower($chore->name)).includes(search.toLowerCase()) || @js(mb_strtolower($chore->description)).includes(search.toLowerCase()) || @js($chore->tags->map(fn ($tag) => mb_strtolower($tag->name))).some(tag => tag.includes(search.toLowerCase()))">
                                         <x-chore-display quick_complete="true" :chore="$chore"/>
                                     </li>
                                 @endforeach
