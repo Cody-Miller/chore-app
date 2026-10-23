@@ -12,17 +12,16 @@
                 <div class="p-4 text-gray-900 dark:text-gray-100">
                     @if ($pets && $pets->count() > 0)
                         <div x-data="{ search: '' }">
-                            <div class="flex flex-col sm:flex-row justify-between gap-4">
-                                <div class="flex-1 min-w-xl">
-                                    <input
-                                        type="text"
-                                        x-model="search"
-                                        placeholder="Search pets..."
-                                        class="min-w-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-500 rounded-md shadow-sm w-full"
-                                    >
-                                </div>
+                            <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-4">
+                                <input
+                                    type="text"
+                                    x-model="search"
+                                    placeholder="Search pets..."
+                                    class="w-full sm:w-auto sm:grow sm:basis-48 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-500 rounded-md shadow-sm"
+                                >
+
                                 <x-buttons.primary-link-button
-                                    class="justify-center"
+                                    class="justify-center sm:ml-auto"
                                     href="/pets/create"
                                 >
                                     Add Pet

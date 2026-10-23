@@ -19,10 +19,10 @@
                                     type="text"
                                     x-model="search"
                                     placeholder="Search chores or tags..."
-                                    class="w-full sm:w-64 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-500 rounded-md shadow-sm"
+                                    class="w-full sm:w-auto sm:grow sm:basis-48 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-500 rounded-md shadow-sm"
                                 >
 
-                                <form method="GET" action="{{ route('chores.index') }}" class="flex flex-col sm:flex-row sm:items-center gap-4">
+                                <form method="GET" action="{{ route('chores.index') }}" class="contents">
                                     <select name="occurrence" onchange="this.form.submit()" aria-label="Filter by occurrence" class="w-full sm:w-auto dark:bg-gray-900 border-gray-300 dark:border-gray-700 dark:text-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-500">
                                         <option value="" @selected(empty($filters['occurrence']))>All occurrences</option>
                                         <option value="recurring" @selected(($filters['occurrence'] ?? null) === 'recurring')>Recurring</option>

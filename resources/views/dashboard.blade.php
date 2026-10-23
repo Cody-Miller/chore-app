@@ -39,7 +39,12 @@
                             </x-tab.link>
                         </x-tab.group>
                         <x-tab.content tabNumber="1">
-                            <h3 class="text-center text-2xl font-bold tracking-wide text-indigo-500 dark:text-indigo-400 mb-6">{{ __('Due Now') }}</h3>
+                            <div class="text-center mb-6">
+                                <h3 class="text-2xl font-bold tracking-wide text-indigo-500 dark:text-indigo-400">{{ __('Due Now') }}</h3>
+                                @if($upcoming_chores && count($upcoming_chores))
+                                    <a href="#upcoming" class="inline-block mt-1 text-sm text-indigo-600 dark:text-indigo-400 hover:underline">{{ __('Jump to Upcoming') }} ↓ ({{ count($upcoming_chores) }})</a>
+                                @endif
+                            </div>
                             @if($due_now_chores && count($due_now_chores))
                                 @foreach($due_now_chores as $due_now_chore)
                                     <x-chore-display quick_complete="true" :chore="$due_now_chore"/>
