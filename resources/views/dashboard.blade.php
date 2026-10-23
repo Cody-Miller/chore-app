@@ -26,11 +26,11 @@
                     <x-tab.wrapper defaultTabNumber="1">
                         <x-tab.group>
                             <x-tab.link tabNumber="1">
-                                {{ __('Due Now') }}
+                                {{ __('Reoccurring') }}
                                 <span class="hidden sm:inline ml-1 text-xs opacity-75">({{ count($due_now_chores ?? []) }} / {{ count($upcoming_chores ?? []) }})</span>
                             </x-tab.link>
                             <x-tab.link tabNumber="2">
-                                {{ __('Non-Reoccuring') }}
+                                {{ __('One-Time') }}
                                 <span class="hidden sm:inline ml-1 text-xs opacity-75">({{ count($one_time_chores ?? []) }})</span>
                             </x-tab.link>
                             <x-tab.link tabNumber="3">
@@ -39,21 +39,22 @@
                             </x-tab.link>
                         </x-tab.group>
                         <x-tab.content tabNumber="1">
+                            <h3 class="text-center text-2xl font-bold tracking-wide text-indigo-500 dark:text-indigo-400 mb-6">{{ __('Due Now') }}</h3>
                             @if($due_now_chores && count($due_now_chores))
                                 @foreach($due_now_chores as $due_now_chore)
                                     <x-chore-display quick_complete="true" :chore="$due_now_chore"/>
                                 @endforeach
                             @else
-                                <p>No chores do right now nice job! 😎</p>
+                                <p class="text-center">No chores due right now, nice job! 😎</p>
                             @endif
-                            <div id="upcoming" class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 scroll-mt-4">
-                                <h3 class="font-semibold text-indigo-400 mb-2">{{ __('Upcoming') }}</h3>
+                            <div id="upcoming" class="mt-12 pt-8 border-t-2 border-gray-200 dark:border-gray-600 scroll-mt-4">
+                                <h3 class="text-center text-2xl font-bold tracking-wide text-indigo-500 dark:text-indigo-400 mb-6">{{ __('Upcoming') }}</h3>
                                 @if($upcoming_chores && count($upcoming_chores))
                                     @foreach($upcoming_chores as $upcoming_chore)
                                         <x-chore-display quick_complete="true" :chore="$upcoming_chore" anchor="upcoming"/>
                                     @endforeach
                                 @else
-                                    <p>No upcoming chores, that's a shocker! ⚡</p>
+                                    <p class="text-center">No upcoming chores, that's a shocker! ⚡</p>
                                 @endif
                             </div>
                         </x-tab.content>
