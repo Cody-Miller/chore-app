@@ -2,13 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Traits\StoresDatesAsUtc;
+use App\Support\Timezone;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class ChoreLog extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, StoresDatesAsUtc;
 
     protected $fillable = [
         'chore_id',
@@ -33,12 +38,43 @@ class ChoreLog extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Record a chore completion for a user, or a 50/50 split between two users.
+     * Returns the created log(s).
+     */
+    public static function recordCompletion(Chore $chore, User $user, ?User $splitWith = null, ?Carbon $at = null): Collection
+    {
+        $completedAt = $at ?? now();
+
+        if (!$splitWith) {
+            return collect([static::create([
+                'chore_id' => $chore->id,
+                'user_id' => $user->id,
+                'completed_at' => $completedAt,
+                'weight_percentage' => 100.00,
+                'is_split' => false,
+            ])]);
+        }
+
+        // A shared ID links the two halves of a split
+        $splitGroupId = Str::uuid();
+
+        return collect([$user, $splitWith])->map(fn (User $splitUser) => static::create([
+            'chore_id' => $chore->id,
+            'user_id' => $splitUser->id,
+            'completed_at' => $completedAt,
+            'weight_percentage' => 50.00,
+            'split_group_id' => $splitGroupId,
+            'is_split' => true,
+        ]));
+    }
+
     public static function getChoreLogsWeightByUsers($startDate, $endDate)
     {
         return static::query()
             ->join('chores', 'chores.id', '=', 'chore_logs.chore_id')
             ->join('users', 'users.id', '=', 'chore_logs.user_id')
-            ->whereBetween('completed_at', [$startDate, $endDate])
+            ->whereBetween('completed_at', Timezone::utcRange($startDate, $endDate))
             ->selectRaw('users.name, SUM(chores.weight * COALESCE(chore_logs.weight_percentage, 100) / 100) AS total_weight')
             ->groupBy('users.id', 'users.name')
             ->get();
@@ -46,23 +82,37 @@ class ChoreLog extends Model
 
     public static function getChoreLogsWeightByUsersAndWeekday($startDate, $endDate)
     {
-        return static::query()
-            ->join('chores', 'chores.id', '=', 'chore_logs.chore_id')
-            ->join('users', 'users.id', '=', 'chore_logs.user_id')
-            ->whereBetween('completed_at', [$startDate, $endDate])
-            ->selectRaw('users.name, SUM(chores.weight * COALESCE(chore_logs.weight_percentage, 100) / 100) AS total_weight, WEEKDAY(completed_at) AS day')
-            ->groupByRaw('users.id, WEEKDAY(completed_at)')
-            ->get();
+        return static::totalsByUserAndWeekday($startDate, $endDate, 'total_weight', fn ($logs) => $logs->sum(
+            fn ($log) => $log->weight * ($log->weight_percentage ?? 100) / 100
+        ));
     }
 
     public static function getChoreLogsCountByUsersAndWeekday($startDate, $endDate)
     {
+        return static::totalsByUserAndWeekday($startDate, $endDate, 'chore_count', fn ($logs) => $logs->count());
+    }
+
+    /**
+     * One row per user per weekday (0 = Monday, in the viewer's timezone) with name, day and the total.
+     * Grouped here rather than in SQL so weekdays follow the viewer's timezone.
+     */
+    private static function totalsByUserAndWeekday($startDate, $endDate, string $field, callable $total): Collection
+    {
+        $weekday = fn ($log) => $log->completed_at->copy()->setTimezone(Timezone::viewer())->dayOfWeekIso - 1;
+
         return static::query()
+            ->join('chores', 'chores.id', '=', 'chore_logs.chore_id')
             ->join('users', 'users.id', '=', 'chore_logs.user_id')
-            ->whereBetween('completed_at', [$startDate, $endDate])
-            ->selectRaw('users.name, COUNT(*) AS chore_count, WEEKDAY(completed_at) AS day')
-            ->groupByRaw('users.id, WEEKDAY(completed_at)')
-            ->get();
+            ->whereBetween('completed_at', Timezone::utcRange($startDate, $endDate))
+            ->get(['users.id as user_id', 'users.name', 'chores.weight', 'chore_logs.weight_percentage', 'chore_logs.completed_at'])
+            ->toBase()
+            ->groupBy(fn ($log) => $log->user_id.'|'.$weekday($log))
+            ->map(fn ($logs) => (object) [
+                'name' => $logs->first()->name,
+                'day' => $weekday($logs->first()),
+                $field => $total($logs),
+            ])
+            ->values();
     }
 
     /**
@@ -72,7 +122,7 @@ class ChoreLog extends Model
     {
         return static::query()
             ->join('chores', 'chores.id', '=', 'chore_logs.chore_id')
-            ->whereBetween('chore_logs.completed_at', [$startDate, $endDate])
+            ->whereBetween('chore_logs.completed_at', Timezone::utcRange($startDate, $endDate))
             ->whereNull('chores.deleted_at')
             ->selectRaw('chores.name, COUNT(DISTINCT COALESCE(chore_logs.split_group_id, chore_logs.id)) AS completion_count')
             ->groupBy('chores.id', 'chores.name')
@@ -91,7 +141,7 @@ class ChoreLog extends Model
     public static function getChoreCompletionRates($startDate, $endDate)
     {
         // Don't expect completions for time that hasn't happened yet
-        $endDate = $endDate->copy()->min(now());
+        [$startDate, $endDate] = Timezone::utcRange($startDate, $endDate->copy()->min(now()));
         $start = $startDate->format('Y-m-d H:i:s');
         $end = $endDate->format('Y-m-d H:i:s');
         $expected = 'FLOOR(TIMESTAMPDIFF(HOUR, GREATEST(?, chores.created_at), ?) / chores.occurrence_hours)';
@@ -99,7 +149,7 @@ class ChoreLog extends Model
         return \DB::table('chores')
             ->leftJoin('chore_logs', function($join) use ($startDate, $endDate) {
                 $join->on('chores.id', '=', 'chore_logs.chore_id')
-                    ->whereBetween('chore_logs.completed_at', [$startDate, $endDate])
+                    ->whereBetween('chore_logs.completed_at', Timezone::utcRange($startDate, $endDate))
                     ->whereNull('chore_logs.deleted_at');
             })
             ->whereNull('chores.deleted_at')

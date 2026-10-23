@@ -2,205 +2,166 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\Pet;
+use App\Http\Resources\PillLogResource;
+use App\Http\Resources\PillResource;
 use App\Models\Pill;
-use App\Models\PillLog;
-use App\Models\User;
+use App\Services\Api\NameResolver;
+use App\Services\MedicationGiver;
+use App\Support\Speech;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
-class PillApiController extends Controller
+class PillApiController extends ApiController
 {
     /**
-     * List medications for a specific pet.
-     *
-     * GET /api/pets/{petName}/pills
+     * GET /api/pills?pet=&tag=&include_inactive=
      */
-    public function index(string $petName): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $pet = $this->findPetByName($petName);
-
-        if (!$pet) {
-            return $this->errorResponse("Pet '{$petName}' not found", 404);
-        }
-
-        $pills = $pet->activePills->map(function ($pill) {
-            return [
-                'name' => $pill->name,
-                'dosage' => $pill->dosage,
-                'description' => $pill->description,
-                'scheduled_times' => $pill->scheduled_times,
-                'completed_today' => $pill->getTodaysCompletedDoses(),
-                'next_scheduled' => $this->getNextUngivenScheduledTime($pill),
-            ];
-        });
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'pet' => $pet->name,
-                'pills' => $pills,
-            ],
-        ]);
-    }
-
-    /**
-     * Record medication dose with smart logic.
-     * Accepts pet name and optional pill name in request body.
-     *
-     * POST /api/record-medication
-     * Body: {"pet": "kage", "pill": "metacam", "notes": "optional"}
-     */
-    public function recordMedication(Request $request): JsonResponse
-    {
-        // Validate request
         $request->validate([
-            'pet' => ['required', 'string'],
+            'pet' => ['nullable', 'string'],
+            'tag' => ['nullable', 'string'],
+        ]);
+
+        $pet = $request->filled('pet') ? NameResolver::pet($request->query('pet')) : null;
+        $tag = $request->query('tag');
+
+        $pills = Pill::with(PillResource::RELATIONS)
+            ->whereHas('pet')
+            ->when(!$request->boolean('include_inactive'), fn ($q) => $q->active())
+            ->when($pet, fn ($q) => $q->where('pet_id', $pet->id))
+            ->when($tag, fn ($q) => $q->whereHas('tags', fn ($t) => $t->where('name', $tag)))
+            ->orderBy('name')
+            ->get();
+
+        return $this->ok(PillResource::collection($pills));
+    }
+
+    /**
+     * GET /api/pills/due
+     * Doses whose time has passed today but haven't been given.
+     */
+    public function due(): JsonResponse
+    {
+        $doses = PillResource::doses('due');
+
+        return $this->ok($doses, Speech::summarize($doses->map(fn ($dose) => $this->spokenDose($dose)), 'medication dose', 'due'));
+    }
+
+    /**
+     * GET /api/pills/upcoming
+     * Doses still to come later today.
+     */
+    public function upcoming(): JsonResponse
+    {
+        $doses = PillResource::doses('upcoming');
+
+        return $this->ok($doses, Speech::summarize($doses->map(fn ($dose) => $this->spokenDose($dose)), 'medication dose', 'coming up later today'));
+    }
+
+    /**
+     * GET /api/pills/today
+     * Every dose today with its status and who gave it.
+     */
+    public function today(): JsonResponse
+    {
+        $doses = PillResource::doses();
+
+        return $this->ok($doses, $this->todayMessage($doses));
+    }
+
+    /**
+     * GET /api/pills/{pill}
+     */
+    public function show(string $pill): JsonResponse
+    {
+        $pill = NameResolver::pill($pill)->load(PillResource::RELATIONS);
+        $pill->setRelation('pillLogs', $pill->pillLogs()->with('user')->limit(10)->get()->each->setRelation('pill', $pill));
+
+        return $this->ok(new PillResource($pill));
+    }
+
+    /**
+     * POST /api/pills/give {"pet": "kage", "pill": "metacam"} or POST /api/pills/{pill}/give
+     * Also POST /api/record-medication, kept for older callers.
+     * Optional: time, early, by, notes, at, dry_run.
+     */
+    public function give(Request $request, ?string $pill = null): JsonResponse
+    {
+        $request->validate([
+            'pet' => ['nullable', 'string'],
             'pill' => ['nullable', 'string'],
+            'time' => ['nullable', 'string'],
+            'by' => ['nullable', 'string'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'at' => ['nullable', 'string'],
         ]);
 
-        $petName = $request->input('pet');
-        $pillName = $request->input('pill');
+        $pill = $pill !== null
+            ? NameResolver::pill($pill)
+            : MedicationGiver::choosePill($request->input('pet'), $request->input('pill'));
+        $user = NameResolver::user($request->input('by'));
+        $at = $this->actionTime($request);
+        $slot = MedicationGiver::chooseSlot($pill, $at, $request->input('time'), $request->boolean('early'));
 
-        $pet = $this->findPetByName($petName);
+        $early = $slot['status'] === 'upcoming';
+        $dose = Speech::possessive($pill->pet->name)." {$slot['label']} dose of {$pill->name}"
+            .($early ? ' early' : '')
+            .($user->isApiUser() ? '' : ", given by {$user->first_name}");
+        $data = [
+            'dry_run' => $request->boolean('dry_run'),
+            'pet' => $pill->pet->name,
+            'pet_slug' => $pill->pet->slug,
+            'pill' => $pill->name,
+            'pill_slug' => $pill->slug,
+            'dosage' => $pill->dosage,
+            'scheduled_time' => $slot['time'],
+            'scheduled_label' => $slot['label'],
+            'early' => $early,
+            'administered_at' => $at->inViewerTz()->toIso8601String(),
+            'administered_by' => $user->first_name,
+        ];
 
-        if (!$pet) {
-            return $this->errorResponse("Pet '{$petName}' not found", 404);
+        if ($request->boolean('dry_run')) {
+            return $this->ok($data, "Would log {$dose}.");
         }
 
-        // Get API user
-        $apiUser = $this->getApiUser();
-        if (!$apiUser) {
-            return $this->errorResponse("API user not configured. Run: php artisan db:seed --class=ApiUserSeeder", 500);
-        }
+        $log = MedicationGiver::give($pill, $slot, $user, $at, $request->input('notes'));
+        $remaining = $pill->doseSlots($at)->where('status', '!=', 'given');
 
-        // Determine which pill to log
-        if ($pillName) {
-            // Specific pill requested
-            $pill = $this->findPillByName($pet, $pillName);
-            if (!$pill) {
-                return $this->errorResponse("Pill '{$pillName}' not found for pet '{$petName}'", 404);
-            }
-        } else {
-            // Smart selection: pet has only one medication?
-            $activePills = $pet->activePills;
-
-            if ($activePills->count() === 0) {
-                return $this->errorResponse("Pet '{$petName}' has no medications configured", 400);
-            } elseif ($activePills->count() > 1) {
-                $pillNames = $activePills->pluck('name')->join(', ');
-                return $this->errorResponse(
-                    "Pet '{$petName}' has multiple medications. Please specify which: {$pillNames}",
-                    400
-                );
-            }
-
-            $pill = $activePills->first();
-        }
-
-        // Get next ungiven scheduled time
-        $nextScheduledTime = $this->getNextUngivenScheduledTime($pill);
-
-        if (!$nextScheduledTime) {
-            return $this->errorResponse(
-                "All scheduled doses for '{$pill->name}' have already been given today",
-                400
-            );
-        }
-
-        // Create pill log
-        $pillLog = PillLog::create([
-            'pill_id' => $pill->id,
-            'user_id' => $apiUser->id,
-            'administered_at' => now(),
-            'scheduled_time' => $nextScheduledTime,
-            'notes' => $request->input('notes'),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => "Recorded {$pill->name} ({$pill->dosage}) for {$pet->name} at {$nextScheduledTime}",
-            'data' => [
-                'pet' => $pet->name,
-                'pill' => $pill->name,
-                'dosage' => $pill->dosage,
-                'scheduled_time' => $nextScheduledTime,
-                'administered_at' => $pillLog->administered_at->toIso8601String(),
-                'administered_by' => 'API',
-            ],
-        ], 201);
-    }
-
-    /**
-     * Find pet by name (case-insensitive).
-     */
-    protected function findPetByName(string $name): ?Pet
-    {
-        return Pet::whereRaw('LOWER(name) = ?', [strtolower($name)])
-            ->first();
-    }
-
-    /**
-     * Find pill by name for specific pet (case-insensitive).
-     */
-    protected function findPillByName(Pet $pet, string $name): ?Pill
-    {
-        return $pet->activePills()
-            ->whereRaw('LOWER(name) = ?', [strtolower($name)])
-            ->first();
-    }
-
-    /**
-     * Get next scheduled time that hasn't been given today.
-     * Returns earliest scheduled time (past or future) that's not logged.
-     */
-    protected function getNextUngivenScheduledTime(Pill $pill): ?string
-    {
-        $completedTimes = $pill->getTodaysCompletedDoses();
-        $currentTime = now()->format('H:i');
-
-        // Check if all scheduled times are complete
-        $remainingTimes = array_filter(
-            $pill->scheduled_times,
-            fn($time) => !in_array($time, $completedTimes)
+        return $this->ok(
+            ['log_id' => $log->id] + $data + ['remaining_today' => $remaining->pluck('time')->values()],
+            "Logged {$dose}.",
+            201
         );
-
-        if (empty($remainingTimes)) {
-            return null;
-        }
-
-        // Sort remaining times
-        sort($remainingTimes);
-
-        // Find first past/current time that's not given, or first future time
-        foreach ($remainingTimes as $time) {
-            if ($time <= $currentTime) {
-                return $time; // Past/current time not yet logged
-            }
-        }
-
-        // All remaining are future - return earliest
-        return $remainingTimes[0];
     }
 
     /**
-     * Get the API system user.
+     * "Kage's Metacam at 8:00 AM".
      */
-    protected function getApiUser(): ?User
+    private function spokenDose(array $dose): string
     {
-        return User::where('email', 'api@system.local')->first();
+        return Speech::possessive($dose['pet'])." {$dose['pill']} at {$dose['label']}";
     }
 
     /**
-     * Standard error response format.
+     * "3 of 5 medication doses have been given today. Still due: Kage's Metacam at 8:00 AM."
      */
-    protected function errorResponse(string $message, int $code = 400): JsonResponse
+    private function todayMessage(Collection $doses): string
     {
-        return response()->json([
-            'success' => false,
-            'error' => $message,
-        ], $code);
+        if ($doses->isEmpty()) {
+            return 'No medication doses are scheduled today.';
+        }
+
+        $given = $doses->where('status', 'given')->count();
+        $due = $doses->where('status', 'due');
+        $message = "{$given} of ".Speech::count($doses->count(), 'medication dose').' '.($given === 1 ? 'has' : 'have').' been given today.';
+
+        if ($due->isNotEmpty()) {
+            $message .= ' Still due: '.Speech::list($due->map(fn ($dose) => $this->spokenDose($dose))).'.';
+        }
+
+        return $message;
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\UpdatePillLogRequest;
 use App\Models\Pill;
 use App\Models\PillLog;
 use App\Models\User;
+use App\Support\Timezone;
 use Carbon\Carbon;
 
 class PillLogController extends Controller
@@ -51,7 +52,8 @@ class PillLogController extends Controller
         $pillLog = PillLog::where('id', $id)->firstOrFail();
         $pillLog->pill_id = $request->pill_id ?? $pillLog->pill_id;
         $pillLog->user_id = $request->user_id;
-        $pillLog->administered_at = $request->administered_at ? Carbon::parse($request->administered_at) : $pillLog->administered_at;
+        // The form shows and takes times in the user's timezone
+        $pillLog->administered_at = $request->administered_at ? Carbon::parse($request->administered_at, Timezone::viewer())->utc() : $pillLog->administered_at;
         $pillLog->scheduled_time = $request->scheduled_time;
         $pillLog->notes = $request->notes;
         $pillLog->update();

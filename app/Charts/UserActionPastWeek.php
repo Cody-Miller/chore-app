@@ -2,6 +2,7 @@
 
 namespace App\Charts;
 
+use App\Support\Timezone;
 use App\Models\ChoreLog;
 use ArielMejiaDev\LarapexCharts\BarChart;
 use ArielMejiaDev\LarapexCharts\LarapexChart;
@@ -19,8 +20,8 @@ class UserActionPastWeek extends Charts
     {
         // Default to current week if no dates provided
         if (!$startDate || !$endDate) {
-            $startDate = now()->startOfWeek();
-            $endDate = now()->endOfWeek();
+            $startDate = now(Timezone::viewer())->startOfWeek();
+            $endDate = now(Timezone::viewer())->endOfWeek();
         }
 
         $records = ChoreLog::getChoreLogsCountByUsersAndWeekday($startDate, $endDate);

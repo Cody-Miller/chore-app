@@ -57,7 +57,7 @@
                         <ul class="space-y-2">
                             @foreach($pill->pillLogs->take(50) as $index => $log)
                                 <li x-show="{{ $index }} < limit" class="text-sm">
-                                    <span class="font-semibold">{{ $log->administered_at->format('m/d/y h:i a') }}</span>
+                                    <span class="font-semibold">{{ $log->administered_at->inViewerTz()->format('m/d/y h:i a') }}</span>
                                     - {{ $log->user?->name }}
                                     ({{ date('g:i A', strtotime($log->scheduled_time)) }} dose)
                                     @if($log->notes)

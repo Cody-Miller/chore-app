@@ -18,7 +18,7 @@ class DashboardController extends Controller
             'due_now_chores' => Chore::getDue($userId, $showAll),
             'upcoming_chores' => Chore::getUpcoming($userId, $showAll),
             'one_time_chores' => Chore::getOneTime($userId, $showAll),
-            'snoozed_chores' => $this->getSnoozedChores(),
+            'snoozed_chores' => Chore::getSnoozed(),
             'users' => User::select('id', 'name')->get(),
             'show_all_chores' => $showAll,
         ]);
@@ -35,20 +35,5 @@ class DashboardController extends Controller
         );
 
         return redirect()->route('dashboard', ['tab' => (int) $request->input('tab', 1)]);
-    }
-
-    /**
-     * Get chores that are snoozed (globally, for all users)
-     */
-    private function getSnoozedChores()
-    {
-        return Chore::select('chores.*', \DB::raw('MAX(chore_snoozes.snoozed_until) as snoozed_until'))
-            ->with('tags')
-            ->join('chore_snoozes', 'chores.id', '=', 'chore_snoozes.chore_id')
-            ->where('chore_snoozes.snoozed_until', '>', now())
-            ->whereNull('chores.deleted_at')
-            ->groupBy('chores.id')
-            ->orderBy('snoozed_until')
-            ->get();
     }
 }

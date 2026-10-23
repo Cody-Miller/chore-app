@@ -38,6 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // API Token Management
     Route::post('/profile/api-tokens', [ApiTokenController::class, 'store'])->name('api-tokens.store');
+    Route::patch('/profile/api-tokens/{token}', [ApiTokenController::class, 'update'])->name('api-tokens.update');
     Route::delete('/profile/api-tokens/{token}', [ApiTokenController::class, 'destroy'])->name('api-tokens.destroy');
 
     // Dashboard

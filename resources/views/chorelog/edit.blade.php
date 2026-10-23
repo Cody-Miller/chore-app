@@ -68,7 +68,7 @@
 
                         <x-form.input
                             name='completed_time'
-                            :default="$chorelog->completed_at?->format('Y-m-d\TH:i')"
+                            :default="$chorelog->completed_at?->inViewerTz()->format('Y-m-d\TH:i')"
                             :type="'datetime-local'"
                         >
                             {{ __('Completed Time:') }}

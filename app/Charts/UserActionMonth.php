@@ -2,6 +2,7 @@
 
 namespace App\Charts;
 
+use App\Support\Timezone;
 use App\Models\ChoreLog;
 use ArielMejiaDev\LarapexCharts\LarapexChart;
 use ArielMejiaDev\LarapexCharts\PieChart;
@@ -19,8 +20,8 @@ class UserActionMonth extends Charts
     {
         // Default to last 30 days if no dates provided
         if (!$startDate || !$endDate) {
-            $startDate = now()->subMonth();
-            $endDate = now();
+            $startDate = now(Timezone::viewer())->subMonth();
+            $endDate = now(Timezone::viewer());
         }
 
         $weights = [];

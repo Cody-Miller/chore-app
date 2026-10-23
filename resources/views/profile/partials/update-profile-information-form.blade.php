@@ -5,7 +5,7 @@
         </h2>
 
         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {{ __("Update your account's profile information and email address.") }}
+            {{ __("Update your account's profile information, email address and timezone.") }}
         </p>
     </header>
 
@@ -45,6 +45,15 @@
                     @endif
                 </div>
             @endif
+        </div>
+
+        <div>
+            <x-form.input-label for="timezone" :value="__('Timezone')" />
+            <x-form.timezone-select id="timezone" name="timezone" class="mt-1 block w-full" :value="old('timezone', $user->timezone)" />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {{ __('Times on this site are shown in this timezone. Pill schedules, when "today" starts and chore due dates always follow the household timezone (:zone).', ['zone' => str_replace('_', ' ', \App\Support\Timezone::household())]) }}
+            </p>
+            <x-form.input-error class="mt-2" :messages="$errors->get('timezone')" />
         </div>
 
         <div class="flex items-center gap-4">

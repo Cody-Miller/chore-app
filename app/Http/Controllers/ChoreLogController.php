@@ -7,8 +7,8 @@ use App\Http\Requests\UpdateChoreLogRequest;
 use App\Models\Chore;
 use App\Models\ChoreLog;
 use App\Models\User;
+use App\Support\Timezone;
 use Carbon\Carbon;
-use Illuminate\Support\Str;
 
 class ChoreLogController extends Controller
 {
@@ -25,44 +25,14 @@ class ChoreLogController extends Controller
 
     public function store(StoreChoreLogRequest $request, Chore $chore)
     {
+        $splitWith = $request->split_with_user_id ? User::findOrFail($request->split_with_user_id) : null;
+        // Splits are always with the logged-in user; otherwise it may be completed for someone else
+        $user = !$splitWith && $request->user_id ? User::findOrFail($request->user_id) : auth()->user();
+
+        $choreLogs = ChoreLog::recordCompletion($chore, $user, $splitWith);
+
         // Only single completions get an edit link; editing one half of a split leaves its partner unchanged
-        $editUrl = null;
-
-        // Check if this is a split completion
-        if ($request->has('split_with_user_id') && $request->split_with_user_id) {
-            // Generate a unique ID to link the two split records
-            $splitGroupId = Str::uuid();
-
-            // Create first log for the authenticated user
-            ChoreLog::create([
-                'chore_id' => $chore->id,
-                'user_id' => auth()->user()->id,
-                'completed_at' => now(),
-                'weight_percentage' => 50.00,
-                'split_group_id' => $splitGroupId,
-                'is_split' => true,
-            ]);
-
-            // Create second log for the selected user
-            ChoreLog::create([
-                'chore_id' => $chore->id,
-                'user_id' => $request->split_with_user_id,
-                'completed_at' => now(),
-                'weight_percentage' => 50.00,
-                'split_group_id' => $splitGroupId,
-                'is_split' => true,
-            ]);
-        } else {
-            // Regular single-user completion
-            $choreLog = ChoreLog::create([
-                'chore_id' => $chore->id,
-                'user_id' => $request->user_id ?? auth()->user()->id,
-                'completed_at' => now(),
-                'weight_percentage' => 100.00,
-                'is_split' => false,
-            ]);
-            $editUrl = route('chorelog.edit', $choreLog);
-        }
+        $editUrl = $splitWith ? null : route('chorelog.edit', $choreLogs->first());
 
         // Redirect back to the same page the user was on
         $redirectTo = $request->input('redirect_to');
@@ -104,7 +74,8 @@ class ChoreLogController extends Controller
     {
         $chorelog->chore_id = $request->chore_id;
         $chorelog->user_id = $request->user_id;
-        $chorelog->completed_at = Carbon::parse($request->completed_time);
+        // The form shows and takes times in the user's timezone
+        $chorelog->completed_at = Carbon::parse($request->completed_time, Timezone::viewer())->utc();
         $chorelog->save();
 
         return redirect()->route('chorelog.index');

@@ -64,12 +64,25 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. We have gone
-    | ahead and set this to a sensible default for you out of the box.
+    | will be used by the PHP date and date-time functions. Everything is
+    | stored and computed in UTC; people see times in their own timezone.
     |
     */
 
-    'timezone' => 'America/New_York',
+    'timezone' => 'UTC',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Household Timezone
+    |--------------------------------------------------------------------------
+    |
+    | Where the household is. Pill schedule times ("08:00"), when "today"
+    | starts and which day a chore is due all follow this timezone, no
+    | matter which timezone the person looking has chosen.
+    |
+    */
+
+    'household_timezone' => env('HOUSEHOLD_TIMEZONE', 'America/New_York'),
 
     /*
     |--------------------------------------------------------------------------
