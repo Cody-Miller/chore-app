@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Services\Api\NameResolver;
+use App\Support\Timezone;
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,12 +33,13 @@ abstract class ApiController extends Controller
     }
 
     /**
-     * Parse a time like "2026-10-23T08:00:00-04:00", "yesterday" or "30 minutes ago" in the app's timezone.
+     * Parse a time like "2026-10-23T08:00:00-04:00", "yesterday" or "30 minutes ago" in the token's
+     * timezone (an offset in the input wins), returned in UTC.
      */
     protected function parseTime(string $input, string $field): Carbon
     {
         try {
-            return Carbon::parse($input)->setTimezone(config('app.timezone'));
+            return Carbon::parse($input, Timezone::viewer())->utc();
         } catch (InvalidFormatException) {
             throw new ApiException("I couldn't understand the time {$input}.", 'invalid_time', 422, ['field' => $field]);
         }

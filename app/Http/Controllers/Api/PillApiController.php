@@ -119,7 +119,7 @@ class PillApiController extends ApiController
             'scheduled_time' => $slot['time'],
             'scheduled_label' => $slot['label'],
             'early' => $early,
-            'administered_at' => $at->toIso8601String(),
+            'administered_at' => $at->inViewerTz()->toIso8601String(),
             'administered_by' => $user->first_name,
         ];
 

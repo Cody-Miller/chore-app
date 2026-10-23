@@ -9,6 +9,7 @@ use App\Charts\UserActionMonth;
 use App\Charts\UserActionPastWeek;
 use App\Charts\UserActionPastWeekWeighted;
 use App\Charts\UserActionYear;
+use App\Support\Timezone;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -17,7 +18,7 @@ class GraphsController extends Controller
     private function parseDateFromRequest(Request $request, string $key, Carbon $default, bool $isEndDate = false): Carbon
     {
         if ($request->input($key)) {
-            $date = Carbon::parse($request->input($key));
+            $date = Carbon::parse($request->input($key), Timezone::viewer());
 
             return $isEndDate ? $date->endOfDay() : $date->startOfDay();
         }
@@ -25,6 +26,9 @@ class GraphsController extends Controller
         return $default;
     }
 
+    /**
+     * Dates are picked and shown in the viewer's timezone.
+     */
     public function index(
         Request $request,
         UserActionPastWeek $chartWeek,
@@ -38,14 +42,14 @@ class GraphsController extends Controller
         $return = [];
 
         // Parse date range parameters
-        $weekStartDate = $this->parseDateFromRequest($request, 'week_start_date', now()->startOfWeek());
-        $weekEndDate = $this->parseDateFromRequest($request, 'week_end_date', now()->endOfWeek(), true);
+        $weekStartDate = $this->parseDateFromRequest($request, 'week_start_date', now(Timezone::viewer())->startOfWeek());
+        $weekEndDate = $this->parseDateFromRequest($request, 'week_end_date', now(Timezone::viewer())->endOfWeek(), true);
 
-        $monthStartDate = $this->parseDateFromRequest($request, 'month_start_date', now()->subMonth());
-        $monthEndDate = $this->parseDateFromRequest($request, 'month_end_date', now(), true);
+        $monthStartDate = $this->parseDateFromRequest($request, 'month_start_date', now(Timezone::viewer())->subMonth());
+        $monthEndDate = $this->parseDateFromRequest($request, 'month_end_date', now(Timezone::viewer()), true);
 
-        $pillStartDate = $this->parseDateFromRequest($request, 'pill_start_date', now()->subMonths()->startOfDay());
-        $pillEndDate = $this->parseDateFromRequest($request, 'pill_end_date', now()->subDay()->endOfDay(), true);
+        $pillStartDate = $this->parseDateFromRequest($request, 'pill_start_date', now(Timezone::viewer())->subMonths()->startOfDay());
+        $pillEndDate = $this->parseDateFromRequest($request, 'pill_end_date', now(Timezone::viewer())->subDay()->endOfDay(), true);
 
         // Build week charts with custom dates
         $content = $chartWeek->build($weekStartDate, $weekEndDate);

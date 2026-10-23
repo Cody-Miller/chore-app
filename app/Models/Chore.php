@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\HasTags;
+use App\Support\Timezone;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -29,64 +30,37 @@ class Chore extends Model
         return 'slug';
     }
 
+    /**
+     * Recurring chores that are due (see getStatus()), skipping snoozed ones.
+     */
     public static function getDue($userId = null, $showAll = true)
     {
-        $query = self::select('chores.*')
-            ->with(['assignedUser', 'tags'])
-            ->leftJoin('chore_logs', function ($join) {
-                $join->on('chores.id', '=', 'chore_logs.chore_id')
-                    ->whereNull('chore_logs.deleted_at');
-            })
-            ->whereNull('chores.deleted_at')
-            ->where('chores.occurrence_hours', '!=', 0)
-            ->groupBy('chores.id')
-            ->havingRaw(
-                'DATE(NOW()) > DATE(DATE_ADD(MAX(chore_logs.completed_at), INTERVAL chores.occurrence_hours HOUR)) OR MAX(chore_logs.completed_at) IS NULL'
-            );
-
-        // Filter out globally snoozed chores
-        $query->whereNotExists(function ($q) {
-            $q->select(\DB::raw(1))
-                ->from('chore_snoozes')
-                ->whereColumn('chore_snoozes.chore_id', 'chores.id')
-                ->where('chore_snoozes.snoozed_until', '>', now());
-        });
-
-        if (!$showAll && $userId) {
-            $query->visibleOnDashboardFor($userId);
-        }
-
-        return $query->get();
+        return self::dashboardCandidates($userId, $showAll)
+            ->filter(fn (Chore $chore) => $chore->getStatus() === 'due')
+            ->values();
     }
 
+    /**
+     * Recurring chores due within the next few days (see getStatus()), skipping snoozed ones.
+     */
     public static function getUpcoming($userId = null, $showAll = true)
     {
-        $query = self::select('chores.*')
-            ->with(['assignedUser', 'tags'])
-            ->leftJoin('chore_logs', function ($join) {
-                $join->on('chores.id', '=', 'chore_logs.chore_id')
-                    ->whereNull('chore_logs.deleted_at');
-            })
-            ->whereNull('chores.deleted_at')
-            ->where('chores.occurrence_hours', '!=', 0)
-            ->groupBy('chores.id')
-            ->havingRaw(
-                'DATE_ADD(DATE(NOW()), INTERVAL 72 HOUR) >= DATE_ADD(DATE(MAX(chore_logs.completed_at)), INTERVAL chores.occurrence_hours HOUR) AND DATE(NOW()) <= DATE_ADD(DATE(MAX(chore_logs.completed_at)), INTERVAL chores.occurrence_hours HOUR)'
-            );
+        return self::dashboardCandidates($userId, $showAll)
+            ->filter(fn (Chore $chore) => $chore->getStatus() === 'upcoming')
+            ->values();
+    }
 
-        // Filter out globally snoozed chores
-        $query->whereNotExists(function ($q) {
-            $q->select(\DB::raw(1))
-                ->from('chore_snoozes')
-                ->whereColumn('chore_snoozes.chore_id', 'chores.id')
-                ->where('chore_snoozes.snoozed_until', '>', now());
-        });
-
-        if (!$showAll && $userId) {
-            $query->visibleOnDashboardFor($userId);
-        }
-
-        return $query->get();
+    /**
+     * Recurring, unsnoozed chores that could be on the dashboard, with what getStatus() needs loaded.
+     */
+    private static function dashboardCandidates($userId, $showAll)
+    {
+        return self::with(['assignedUser', 'tags', 'lastChoreLog', 'activeSnooze'])
+            ->where('occurrence_hours', '!=', 0)
+            ->whereDoesntHave('snoozes', fn ($q) => $q->where('snoozed_until', '>', now()))
+            ->when(!$showAll && $userId, fn ($q) => $q->visibleOnDashboardFor($userId))
+            ->orderBy('id')
+            ->get();
     }
 
     public static function getOneTime($userId = null, $showAll = true)
@@ -153,12 +127,13 @@ class Chore extends Model
             return null;
         }
 
-        return $lastCompleted->copy()->addHours($this->occurrence_hours);
+        return $this->addOccurrence($lastCompleted->copy()->setTimezone(Timezone::household()))->utc();
     }
 
     /**
      * Which dashboard list this chore belongs to: snoozed, one_time, due, upcoming or scheduled.
-     * Mirrors the date math in getDue() and getUpcoming().
+     * Dates are the household's. A chore is due the day after its due date and upcoming
+     * from 3 days before it, matching how the dashboard has always worked.
      */
     public function getStatus(): string
     {
@@ -169,19 +144,30 @@ class Chore extends Model
             return 'one_time';
         }
 
-        $lastCompleted = $this->lastChoreLog?->completed_at;
-        $today = now()->startOfDay();
+        $lastCompleted = $this->lastChoreLog?->completed_at?->copy()->setTimezone(Timezone::household());
+        $today = now(Timezone::household())->startOfDay();
 
-        if (!$lastCompleted || $today->gt($lastCompleted->copy()->addHours($this->occurrence_hours)->startOfDay())) {
+        if (!$lastCompleted || $today->gt($this->addOccurrence($lastCompleted)->startOfDay())) {
             return 'due';
         }
 
-        $upcomingAt = $lastCompleted->copy()->startOfDay()->addHours($this->occurrence_hours);
-        if ($today->copy()->addHours(72)->gte($upcomingAt) && $today->lte($upcomingAt)) {
+        $upcomingAt = $this->addOccurrence($lastCompleted->copy()->startOfDay());
+        if ($today->copy()->addDays(3)->gte($upcomingAt) && $today->lte($upcomingAt)) {
             return 'upcoming';
         }
 
         return 'scheduled';
+    }
+
+    /**
+     * The date plus this chore's occurrence, counting whole days on the calendar so
+     * daylight saving changes don't shift it by an hour.
+     */
+    private function addOccurrence(Carbon $date): Carbon
+    {
+        return $date->copy()
+            ->addDays(intdiv($this->occurrence_hours, 24))
+            ->addHours($this->occurrence_hours % 24);
     }
 
     public function hasCompleted()

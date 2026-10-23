@@ -26,10 +26,10 @@ class ChoreResource extends JsonResource
             'occurrence_hours' => $this->occurrence_hours,
             'assigned_to' => $this->assignedUser?->first_name,
             'tags' => $this->tags->pluck('name'),
-            'last_completed_at' => $this->lastChoreLog?->completed_at?->toIso8601String(),
+            'last_completed_at' => $this->lastChoreLog?->completed_at?->inViewerTz()->toIso8601String(),
             'last_completed_by' => $this->lastChoreLog?->user?->first_name,
-            'next_due_at' => $this->getNextDueAt()?->toIso8601String(),
-            'snoozed_until' => $this->activeSnooze?->snoozed_until?->toIso8601String(),
+            'next_due_at' => $this->getNextDueAt()?->inViewerTz()->toIso8601String(),
+            'snoozed_until' => $this->activeSnooze?->snoozed_until?->inViewerTz()->toIso8601String(),
             'url' => route('chores.show', $this->slug),
             'recent_logs' => ChoreLogResource::collection($this->whenLoaded('choreLogs')),
         ];

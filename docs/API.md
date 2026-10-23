@@ -27,9 +27,9 @@ Every response includes a short English sentence written to be **spoken aloud as
 | Request bodies | JSON, with `Content-Type: application/json` |
 | `Accept` header | Optional. The API always answers in JSON |
 | Rate limit | 60 requests per minute per token. Going over returns `429` with a `Retry-After` header |
-| Server timezone | `America/New_York`. Timestamps are ISO 8601 with an offset, and `"HH:MM"` values are 24-hour local time |
+| Timezones | Timestamps are in **the token's timezone** (ISO 8601 with offset). Schedule times (`"HH:MM"`) are in the **household timezone**. The `X-Timezone` response header names the token's zone. See §4 |
 
-**Getting a token:** log in to the web UI and go to **Profile → API Tokens**. The token is shown only once, never expires, and can be revoked on the same page.
+**Getting a token:** log in to the web UI and go to **Profile → API Tokens**. Pick the token's **timezone** (where the voice assistant is) when creating it; it can be changed later on the same page without replacing the token. The token is shown only once, never expires, and can be revoked on the same page.
 
 **Scope:** any valid token can see and act on everything in the household. Nothing is filtered by the token's owner.
 
@@ -103,18 +103,31 @@ Speech-to-text often mishears names. When you get a `*_not_found` with `candidat
 
 ## 4. Time rules
 
-- **Effective day.** "Today" runs from **03:00 to 02:59:59 the next calendar day**. A dose logged at 01:30 Tuesday counts toward **Monday**.
+**Two timezones are in play:**
+
+- **The token's timezone** (set per token on Profile → API Tokens, default `America/New_York`; the `X-Timezone` response header names it).
+  - Every timestamp in a response (`completed_at`, `given_at`, `scheduled_at`, `next_due_at`, `snoozed_until`, ...) is ISO 8601 with that zone's offset.
+  - `at` and `since` are read in that zone unless they include their own offset, so `"today 7am"` means 7 AM where the assistant is.
+  - Spoken days and times in `message` ("next due tomorrow", "at 8:05 PM" for when something was logged) use it too.
+  - Stats weeks run Monday to Sunday in that zone.
+- **The household timezone** (where the house is; set by the server, default `America/New_York`).
+  - Pill schedule times (`scheduled_times`, a dose's `time` and `label`, `next_scheduled`, the `time` field) are always household times. "8:00 AM" means 8 AM at the house.
+  - When "today" starts and which day a chore is due follow the household zone.
+
+When both are the same zone (the usual case), there is nothing to convert.
+
+- **Effective day.** "Today" runs from **03:00 to 02:59:59 the next calendar day**, household time. A dose logged at 01:30 Tuesday counts toward **Monday**.
   - A dose scheduled at `"01:00"` is the *last* dose of the effective day, not the first.
 - **Dose slots.** Each pill has daily `scheduled_times` (`"HH:MM"`). Logging a dose fills exactly one slot for the current effective day. Each slot has a `status`:
   - `given`: logged today
   - `due`: its time has passed and it hasn't been logged (this includes overdue doses)
   - `upcoming`: later today
 - **`at`** (optional on chore completions and doses): when it actually happened.
-  - It accepts ISO 8601 (`2026-10-23T08:15:00-04:00`) or plain English the server can parse (`"30 minutes ago"`, `"2 hours ago"`, `"today 8am"`).
+  - It accepts ISO 8601 (`2026-10-23T08:15:00-04:00`) or plain English the server can parse (`"30 minutes ago"`, `"2 hours ago"`, `"today 8am"`), read in the token's timezone.
   - It must be within the **last 24 hours** and not in the future; otherwise you get `422 invalid_time`.
   - The dose slot is worked out as of that moment.
-- **`time`** (optional on doses): which slot to fill. Accepts `"20:00"`, `"8pm"`, `"8:00 PM"`, and similar.
-- **`since`** (history filters): any parseable time (`"yesterday"`, `"7 days ago"`, ISO 8601).
+- **`time`** (optional on doses): which slot to fill, in household time. Accepts `"20:00"`, `"8pm"`, `"8:00 PM"`, and similar.
+- **`since`** (history filters): any parseable time (`"yesterday"`, `"7 days ago"`, ISO 8601), read in the token's timezone.
 
 ---
 
@@ -368,6 +381,8 @@ The message reads like "Removed the Do the Dishes completion from 7:05 PM."
 ```
 Inside a pill object's `doses` array, the first five fields (`pet` through `dosage`) are left out.
 
+`time` and `label` are household schedule times. `scheduled_at`, `given_at`, and the other timestamps are in the token's timezone, so for a token outside the household's zone `label` ("8:00 AM") and `scheduled_at` (`…T05:00:00-07:00`) can show different clock times for the same dose.
+
 **Pill object**
 ```json
 {
@@ -589,6 +604,8 @@ Undoes a dose that was created in the last 24 hours. The message reads like "Rem
 
 The YAML below targets recent Home Assistant releases (2024+), which have `response_variable` and `conversation` triggers. **Check field names against the HA version you're configuring**, especially how `rest_command` reports non-2xx responses.
 
+Set the token's timezone (Profile → API Tokens) to the same zone as Home Assistant (Settings → System → General), so the times HA speaks and the `at` values it sends line up.
+
 ### 9.1 Secrets and REST commands
 
 `secrets.yaml`
@@ -740,6 +757,7 @@ curl -s "${H[@]}" -X DELETE "$BASE_URL/api/pill-logs/last"
 - Check `success` and speak `message` or `error`. Branch on `code`.
 - Names can be a slug, a name, or unique whole words. A `409` means ask the user; never guess.
 - People are given by first name, full name, or id. With no `by`, the action is credited to API User.
+- Timestamps and `at`/`since` use the token's timezone (`X-Timezone` header). Schedule times and "today" use the household timezone.
 - "Today" runs from 03:00 to 02:59. Doses are slots, and a not-yet-due slot needs `early: true`.
 - `at` can backdate an action up to 24 hours. `dry_run` previews without saving.
 - POST actions are not idempotent. Keep `log_id` for "undo that". Undo only works within 24 hours.

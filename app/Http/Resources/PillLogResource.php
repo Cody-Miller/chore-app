@@ -16,7 +16,7 @@ class PillLogResource extends JsonResource
             'pill_slug' => $this->pill?->slug,
             'dosage' => $this->pill?->dosage,
             'scheduled_time' => $this->scheduled_time,
-            'administered_at' => $this->administered_at->toIso8601String(),
+            'administered_at' => $this->administered_at->inViewerTz()->toIso8601String(),
             'given_by' => $this->user?->first_name,
             'notes' => $this->notes,
         ];

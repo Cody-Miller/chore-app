@@ -81,7 +81,7 @@
                                                 {{ $snoozed_chore->name }}
                                             </a>
                                             <span class="block whitespace-wrap px-1">{{ $snoozed_chore->description }}</span>
-                                            <span class="px-1"><span class="font-semibold">Snoozed until:</span> {{ \Carbon\Carbon::parse($snoozed_chore->snoozed_until)->format('m/d/y h:i a') }}</span>
+                                            <span class="px-1"><span class="font-semibold">Snoozed until:</span> {{ \Carbon\Carbon::parse($snoozed_chore->snoozed_until, 'UTC')->inViewerTz()->format('m/d/y h:i a') }}</span>
                                             <x-tag-list :tags="$snoozed_chore->tags" class="mt-1 px-1"/>
                                         </span>
                                         <form method="POST" action="{{ route('chores.unsnooze', $snoozed_chore->slug) }}" class="sm:ml-8">

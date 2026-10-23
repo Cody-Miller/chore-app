@@ -19,7 +19,7 @@
             @endforeach
         </span>
         @if($pill->getLastLog())
-            <span class="block px-1"><span class="font-semibold">Last Given:</span> {{ $pill->getLastAdministeredUser() }} - {{ $pill->getLastAdministeredDate()->format('m/d/y h:i a') }}</span>
+            <span class="block px-1"><span class="font-semibold">Last Given:</span> {{ $pill->getLastAdministeredUser() }} - {{ $pill->getLastAdministeredDate()->inViewerTz()->format('m/d/y h:i a') }}</span>
         @endif
         <x-tag-list :tags="$pill->tags" class="mt-1 px-1"/>
     </span>

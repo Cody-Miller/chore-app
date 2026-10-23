@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\PillLogApiController;
 use App\Http\Controllers\Api\StatsApiController;
 use App\Http\Controllers\Api\SummaryApiController;
 use App\Http\Controllers\Api\UserApiController;
+use App\Http\Middleware\UseViewerTimezone;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,11 +23,12 @@ use App\Http\Controllers\Api\UserApiController;
 |
 | Pets, pills and chores are identified by slug or name. Fixed paths like
 | /chores/due are declared before /chores/{chore} so they aren't read as names.
+| Times are shown and read in the token's timezone (see UseViewerTimezone).
 | See docs/API.md for the full reference.
 |
 */
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', UseViewerTimezone::class])->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });

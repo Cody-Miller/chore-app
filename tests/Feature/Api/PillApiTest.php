@@ -26,7 +26,8 @@ class PillApiTest extends TestCase
     {
         parent::setUp();
 
-        Carbon::setTestNow(Carbon::parse('2026-10-23 10:00:00'));
+        // Times are the household's (New York); "now" is 10:00 there
+        Carbon::setTestNow(Carbon::parse('2026-10-23 10:00:00', 'America/New_York'));
         Sanctum::actingAs(User::factory()->create(['name' => 'Cody Miller']));
         $this->sarah = User::factory()->create(['name' => 'Sarah Smith']);
 
@@ -180,7 +181,7 @@ class PillApiTest extends TestCase
     public function test_doses_after_midnight_belong_to_the_end_of_the_day(): void
     {
         $nightly = $this->createPill($this->kage, 'Night Drops', ['22:00', '01:00']);
-        Carbon::setTestNow(Carbon::parse('2026-10-23 23:00:00'));
+        Carbon::setTestNow(Carbon::parse('2026-10-23 23:00:00', 'America/New_York'));
         $this->logDose($nightly, '22:00');
 
         // 01:00 is still two hours away, not overdue
@@ -190,7 +191,7 @@ class PillApiTest extends TestCase
             ->assertJsonPath('next_time', '01:00');
 
         // At 01:30 it's the same effective day, and the 01:00 dose is due
-        Carbon::setTestNow(Carbon::parse('2026-10-24 01:30:00'));
+        Carbon::setTestNow(Carbon::parse('2026-10-24 01:30:00', 'America/New_York'));
         $this->postJson('/api/pills/give', ['pill' => 'night drops'])
             ->assertCreated()
             ->assertJsonPath('data.scheduled_time', '01:00')
@@ -229,7 +230,9 @@ class PillApiTest extends TestCase
             ->assertJsonPath('data.scheduled_time', '08:00');
 
         $log = PillLog::sole();
-        $this->assertEquals('2026-10-23 08:00:00', $log->administered_at->format('Y-m-d H:i:s'));
+        $this->assertEquals('2026-10-23 08:00:00', $log->administered_at->setTimezone('America/New_York')->format('Y-m-d H:i:s'));
+        // Stored in UTC
+        $this->assertDatabaseHas('pill_logs', ['id' => $log->id, 'administered_at' => '2026-10-23 12:00:00']);
         $this->assertSame('with food', $log->notes);
 
         $this->postJson('/api/pills/give', ['pet' => 'kage', 'at' => 'tomorrow'])->assertStatus(422)->assertJsonPath('code', 'invalid_time');

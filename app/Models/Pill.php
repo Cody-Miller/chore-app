@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Traits\HasEffectiveDate;
 use App\Models\Traits\HasTags;
+use App\Support\Timezone;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -159,12 +160,12 @@ class Pill extends Model
     }
 
     /**
-     * When a scheduled time falls on a given effective date.
+     * When a scheduled time falls on a given effective date, in the household's timezone.
      * Times before the cutoff belong to the next calendar day.
      */
     public static function slotDateTime(Carbon $date, string $time): Carbon
     {
-        $slotAt = $date->copy()->setTimeFromTimeString($time);
+        $slotAt = Carbon::parse($date->toDateString().' '.$time, Timezone::household());
         if ($slotAt->hour < static::DAY_CUTOFF_HOUR) {
             $slotAt->addDay();
         }
@@ -177,7 +178,7 @@ class Pill extends Model
      */
     public function getNextScheduledTime()
     {
-        $currentTime = now()->format('H:i');
+        $currentTime = now(Timezone::household())->format('H:i');
         foreach ($this->scheduled_times as $time) {
             if ($time > $currentTime) {
                 return $time;

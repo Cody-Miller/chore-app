@@ -129,7 +129,7 @@ class ChoreApiController extends ApiController
         };
         $data = [
             'dry_run' => $request->boolean('dry_run'),
-            'completed_at' => $at->toIso8601String(),
+            'completed_at' => $at->inViewerTz()->toIso8601String(),
             'completed_by' => $user->first_name,
             'split_with' => $splitWith?->first_name,
         ];

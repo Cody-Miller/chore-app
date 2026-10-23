@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateChoreLogRequest;
 use App\Models\Chore;
 use App\Models\ChoreLog;
 use App\Models\User;
+use App\Support\Timezone;
 use Carbon\Carbon;
 
 class ChoreLogController extends Controller
@@ -73,7 +74,8 @@ class ChoreLogController extends Controller
     {
         $chorelog->chore_id = $request->chore_id;
         $chorelog->user_id = $request->user_id;
-        $chorelog->completed_at = Carbon::parse($request->completed_time);
+        // The form shows and takes times in the user's timezone
+        $chorelog->completed_at = Carbon::parse($request->completed_time, Timezone::viewer())->utc();
         $chorelog->save();
 
         return redirect()->route('chorelog.index');

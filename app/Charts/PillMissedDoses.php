@@ -2,6 +2,7 @@
 
 namespace App\Charts;
 
+use App\Support\Timezone;
 use App\Models\PillLog;
 use ArielMejiaDev\LarapexCharts\BarChart;
 use ArielMejiaDev\LarapexCharts\LarapexChart;
@@ -20,8 +21,8 @@ class PillMissedDoses extends Charts
     {
         // Default to last 1 month if no dates provided
         if (! $startDate || ! $endDate) {
-            $endDate = now()->subDay(); // Yesterday (today isn't complete yet)
-            $startDate = now()->subMonths();
+            $endDate = now(Timezone::viewer())->subDay(); // Yesterday (today isn't complete yet)
+            $startDate = now(Timezone::viewer())->subMonths();
         }
 
         $records = PillLog::getMissedDosesByPill($startDate, $endDate);

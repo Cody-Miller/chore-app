@@ -25,8 +25,8 @@
                             <tbody>
                             @foreach($pillLogs as $pillLog)
                                 <x-table.body-row>
-                                    <x-table.body-data-number>{{ $pillLog->administered_at->format('m/d/y') }}</x-table.body-data-number>
-                                    <x-table.body-data-number>{{ $pillLog->administered_at->format('h:i a') }}</x-table.body-data-number>
+                                    <x-table.body-data-number>{{ $pillLog->administered_at->inViewerTz()->format('m/d/y') }}</x-table.body-data-number>
+                                    <x-table.body-data-number>{{ $pillLog->administered_at->inViewerTz()->format('h:i a') }}</x-table.body-data-number>
                                     <x-table.body-data-text>{{ $pillLog->user?->name }}</x-table.body-data-text>
                                     <x-table.body-data-text class="dark:text-indigo-500 underline">
                                         <a href="/pills/{{ $pillLog->pill?->slug }}">{{ $pillLog->pill->name }}</a>

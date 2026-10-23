@@ -33,7 +33,7 @@ class PillResource extends JsonResource
             'completed_today' => $slots->where('status', 'given')->pluck('time')->values(),
             'next_scheduled' => $next['time'] ?? null,
             'tags' => $this->whenLoaded('tags', fn () => $this->tags->pluck('name')),
-            'last_given_at' => $this->lastPillLog?->administered_at?->toIso8601String(),
+            'last_given_at' => $this->lastPillLog?->administered_at?->inViewerTz()->toIso8601String(),
             'last_given_by' => $this->lastPillLog?->user?->first_name,
             'recent_logs' => PillLogResource::collection($this->whenLoaded('pillLogs')),
         ];
@@ -55,9 +55,9 @@ class PillResource extends JsonResource
         return $whose + [
             'time' => $slot['time'],
             'label' => $slot['label'],
-            'scheduled_at' => $slot['at']->toIso8601String(),
+            'scheduled_at' => $slot['at']->inViewerTz()->toIso8601String(),
             'status' => $slot['status'],
-            'given_at' => $slot['log']?->administered_at->toIso8601String(),
+            'given_at' => $slot['log']?->administered_at->inViewerTz()->toIso8601String(),
             'given_by' => $slot['log']?->user?->first_name,
         ];
     }

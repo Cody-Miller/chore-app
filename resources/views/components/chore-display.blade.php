@@ -23,7 +23,7 @@
             <span class="px-1"><span class="font-semibold">Assigned To:</span> {{ $chore->assignedUser->name }}</span>
         @endif
         @if($chore->hasCompleted())
-            <span class="px-1"><span class="font-semibold">Last Completed:</span> {{ $chore->getLastCompletedUser() }} - {{ $chore->getLastCompletedDate()->format('m/d/y h:i a') }}</span>
+            <span class="px-1"><span class="font-semibold">Last Completed:</span> {{ $chore->getLastCompletedUser() }} - {{ $chore->getLastCompletedDate()->inViewerTz()->format('m/d/y h:i a') }}</span>
         @endif
         <x-tag-list :tags="$chore->tags" class="mt-1 px-1"/>
     </span>

@@ -43,7 +43,7 @@
 
                         <x-form.input
                             name='administered_at'
-                            :default="$pilllog->administered_at?->format('Y-m-d\TH:i')"
+                            :default="$pilllog->administered_at?->inViewerTz()->format('Y-m-d\TH:i')"
                             :type="'datetime-local'"
                         >
                             {{ __('Administered Time:') }}

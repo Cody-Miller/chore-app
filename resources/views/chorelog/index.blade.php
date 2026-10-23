@@ -23,8 +23,8 @@
                             <tbody>
                             @foreach($choreLogs as $choreLog)
                                 <x-table.body-row>
-                                    <x-table.body-data-number>{{ $choreLog->completed_at->format('m/d/y') }}</x-table.body-data-number>
-                                    <x-table.body-data-number>{{ $choreLog->completed_at->format('h:i a') }}</x-table.body-data-number>
+                                    <x-table.body-data-number>{{ $choreLog->completed_at->inViewerTz()->format('m/d/y') }}</x-table.body-data-number>
+                                    <x-table.body-data-number>{{ $choreLog->completed_at->inViewerTz()->format('h:i a') }}</x-table.body-data-number>
                                     <x-table.body-data-text>
                                         {{ $choreLog->user?->name }}
                                         @if($choreLog->is_split)

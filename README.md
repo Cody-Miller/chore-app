@@ -11,6 +11,10 @@ A self-hosted Laravel app for tracking household chores (and pet medication sche
 - **Pet & pill tracking** — manage pets and their medication schedules, log doses, and view an at-a-glance pill dashboard.
 - **API** — a JSON API (Laravel Sanctum tokens) for checking what's due, completing and snoozing chores, giving pet meds, undoing recent logs and reading stats. Built for voice assistants: every response includes a sentence that can be read aloud. See [docs/API.md](docs/API.md).
 
+## Timezones
+
+All times are stored in UTC. Each person picks their timezone on the Profile page, and each API token has its own (for example, where a voice assistant is); times are shown and entered in that zone. Pill schedules, when "today" starts (3 AM) and chore due dates follow the household's timezone, set with `HOUSEHOLD_TIMEZONE` in `.env` (default `America/New_York`).
+
 ## Tech stack
 
 - PHP 8.3+ / Laravel 12

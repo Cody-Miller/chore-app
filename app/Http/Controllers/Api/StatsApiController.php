@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\ChoreLog;
 use App\Models\PillLog;
 use App\Support\Speech;
+use App\Support\Timezone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -20,10 +21,12 @@ class StatsApiController extends ApiController
         $request->validate(['period' => ['nullable', 'in:week,month,year']]);
 
         $period = $request->query('period', 'week');
+        // Weeks and days are the token's
+        $now = now(Timezone::viewer());
         [$start, $end, $label] = match ($period) {
-            'week' => [now()->startOfWeek(), now()->endOfWeek(), 'This week'],
-            'month' => [now()->subMonth(), now(), 'In the past month'],
-            'year' => [now()->subYear(), now(), 'In the past year'],
+            'week' => [$now->copy()->startOfWeek(), $now->copy()->endOfWeek(), 'This week'],
+            'month' => [$now->copy()->subMonth(), $now, 'In the past month'],
+            'year' => [$now->copy()->subYear(), $now, 'In the past year'],
         };
 
         $chorePoints = ChoreLog::getChoreLogsWeightByUsers($start, $end)
@@ -37,7 +40,7 @@ class StatsApiController extends ApiController
             ->values();
 
         // Like the Graphs page, only count missed doses up to the end of yesterday
-        $missedDoses = PillLog::getMissedDosesByPill($start->copy()->startOfDay(), $end->copy()->min(now()->subDay()->endOfDay()))
+        $missedDoses = PillLog::getMissedDosesByPill($start->copy()->startOfDay(), $end->copy()->min($now->copy()->subDay()->endOfDay()))
             ->groupBy('pill_id')
             ->map(fn ($days) => ['pet' => $days->first()['pet_name'], 'pill' => $days->first()['pill_name'], 'missed' => $days->sum('missed_count')])
             ->sortByDesc('missed')
@@ -45,8 +48,8 @@ class StatsApiController extends ApiController
 
         return $this->ok([
             'period' => $period,
-            'start' => $start->toIso8601String(),
-            'end' => $end->toIso8601String(),
+            'start' => $start->inViewerTz()->toIso8601String(),
+            'end' => $end->inViewerTz()->toIso8601String(),
             'chore_points' => $chorePoints,
             'doses_given' => $dosesGiven,
             'missed_doses' => $missedDoses,

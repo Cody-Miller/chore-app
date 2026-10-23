@@ -41,11 +41,11 @@ class Speech
     }
 
     /**
-     * "8:00 AM".
+     * "8:00 AM". A moment is said in the viewer's timezone; a schedule time like "08:00" as written.
      */
     public static function time(Carbon|string $time): string
     {
-        return ($time instanceof Carbon ? $time : Carbon::parse($time))->format('g:i A');
+        return ($time instanceof Carbon ? $time->inViewerTz() : Carbon::parse($time))->format('g:i A');
     }
 
     /**
@@ -63,11 +63,13 @@ class Speech
     }
 
     /**
-     * "today", "tomorrow", "yesterday", a weekday within the next week, otherwise "October 30".
+     * "today", "tomorrow", "yesterday", a weekday within the next week, otherwise "October 30",
+     * in the viewer's timezone.
      */
     public static function day(Carbon $date): string
     {
-        $days = (int) round(now()->startOfDay()->diffInDays($date->copy()->startOfDay(), false));
+        $date = $date->inViewerTz();
+        $days = (int) round(now(Timezone::viewer())->startOfDay()->diffInDays($date->copy()->startOfDay(), false));
 
         return match (true) {
             $days === 0 => 'today',

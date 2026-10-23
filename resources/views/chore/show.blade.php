@@ -20,7 +20,7 @@
                                 <ul class="list-disc list-inside leading-4">
                                     @foreach($chore->choreLogs->take(50) as $index => $choreLog)
                                         <li x-show="{{ $index }} < limit">
-                                            {{ $choreLog->completed_at->format('m/d/y h:i a') }}
+                                            {{ $choreLog->completed_at->inViewerTz()->format('m/d/y h:i a') }}
                                             - {{ $choreLog->user?->name }}
                                         </li>
                                     @endforeach

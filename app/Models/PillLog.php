@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use App\Models\Traits\HasEffectiveDate;
+use App\Models\Traits\StoresDatesAsUtc;
+use App\Support\Timezone;
+use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PillLog extends Model
 {
-    use HasEffectiveDate, HasFactory, SoftDeletes;
+    use HasEffectiveDate, HasFactory, SoftDeletes, StoresDatesAsUtc;
 
     protected $fillable = [
         'pill_id',
@@ -47,7 +50,7 @@ class PillLog extends Model
     {
         return static::query()
             ->join('users', 'users.id', '=', 'pill_logs.user_id')
-            ->whereBetween('administered_at', [$startDate, $endDate])
+            ->whereBetween('administered_at', Timezone::utcRange($startDate, $endDate))
             ->whereNull('pill_logs.deleted_at')
             ->selectRaw('users.name, COUNT(*) AS pill_count')
             ->groupBy('users.id', 'users.name')
@@ -62,7 +65,7 @@ class PillLog extends Model
         return static::query()
             ->join('pills', 'pills.id', '=', 'pill_logs.pill_id')
             ->join('pets', 'pets.id', '=', 'pills.pet_id')
-            ->whereBetween('administered_at', [$startDate, $endDate])
+            ->whereBetween('administered_at', Timezone::utcRange($startDate, $endDate))
             ->whereNull('pill_logs.deleted_at')
             ->whereNull('pills.deleted_at')
             ->whereNull('pets.deleted_at')
@@ -81,7 +84,11 @@ class PillLog extends Model
         $pills = Pill::whereNull('deleted_at')->active()->with('pet')->get();
         $results = [];
 
-        $period = CarbonPeriod::create($startDate, $endDate);
+        // Step through the household's calendar dates
+        $period = CarbonPeriod::create(
+            Carbon::parse($startDate->toDateString(), Timezone::household()),
+            Carbon::parse($endDate->toDateString(), Timezone::household())
+        );
         $now = now();
 
         // Load every log in the range once, keyed by pill / effective date / scheduled time
@@ -98,11 +105,7 @@ class PillLog extends Model
                 $missedCount = 0;
 
                 foreach ($pill->scheduled_times ?? [] as $scheduledTime) {
-                    // Times before the cutoff belong to the next calendar day
-                    $scheduledDateTime = $date->copy()->setTimeFromTimeString($scheduledTime);
-                    if ($scheduledDateTime->hour < static::DAY_CUTOFF_HOUR) {
-                        $scheduledDateTime->addDay();
-                    }
+                    $scheduledDateTime = Pill::slotDateTime($date, $scheduledTime);
 
                     // Only count as missed if the time has passed and the pill existed
                     if ($scheduledDateTime->lt($now) && $scheduledDateTime->gte($pill->created_at)) {
