@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Chore;
-use App\Models\ChoreSnooze;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,18 +18,9 @@ class ChoreSnoozeController extends Controller
         ]);
 
         $chore = Chore::where('slug', $slug)->firstOrFail();
-        $user = Auth::user();
         $hours = $request->integer('hours');
 
-        // Delete any existing snoozes for this chore (global snooze)
-        ChoreSnooze::where('chore_id', $chore->id)->delete();
-
-        // Create new snooze
-        ChoreSnooze::create([
-            'chore_id' => $chore->id,
-            'user_id' => $user->id,
-            'snoozed_until' => now()->addHours($hours),
-        ]);
+        $chore->snooze(Auth::user(), $hours);
 
         return redirect()->back()->with('success', "Chore '{$chore->name}' snoozed for {$hours} hour(s).");
     }
@@ -42,8 +32,7 @@ class ChoreSnoozeController extends Controller
     {
         $chore = Chore::where('slug', $slug)->firstOrFail();
 
-        // Delete all snoozes for this chore (global unsnooze)
-        ChoreSnooze::where('chore_id', $chore->id)->delete();
+        $chore->unsnooze();
 
         return redirect()->back()->with('success', "Chore '{$chore->name}' unnoozed.");
     }

@@ -9,7 +9,7 @@ A self-hosted Laravel app for tracking household chores (and pet medication sche
 - **Snoozing** — temporarily snooze a chore so it drops off the due list without logging a completion (`App\Http\Controllers\ChoreSnoozeController`).
 - **Graphs** — visual breakdowns of completions and missed chores over time, built with [LarapexCharts](https://github.com/ArielMejiaDev/larapex-charts).
 - **Pet & pill tracking** — manage pets and their medication schedules, log doses, and view an at-a-glance pill dashboard.
-- **API tokens** — issue personal access tokens (Laravel Sanctum) for scripting against the app's API.
+- **API** — a JSON API (Laravel Sanctum tokens) for checking what's due, completing and snoozing chores, giving pet meds, undoing recent logs and reading stats. Built for voice assistants: every response includes a sentence that can be read aloud. See [docs/API.md](docs/API.md).
 
 ## Tech stack
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\HasTags;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -104,6 +105,85 @@ class Chore extends Model
         return $query->get();
     }
 
+    /**
+     * Get chores that are snoozed (globally, for all users), soonest to wake first.
+     */
+    public static function getSnoozed()
+    {
+        return self::select('chores.*', \DB::raw('MAX(chore_snoozes.snoozed_until) as snoozed_until'))
+            ->with('tags')
+            ->join('chore_snoozes', 'chores.id', '=', 'chore_snoozes.chore_id')
+            ->where('chore_snoozes.snoozed_until', '>', now())
+            ->whereNull('chores.deleted_at')
+            ->groupBy('chores.id')
+            ->orderBy('snoozed_until')
+            ->get();
+    }
+
+    /**
+     * Snooze this chore globally, replacing any existing snooze.
+     */
+    public function snooze(User $user, int $hours): ChoreSnooze
+    {
+        $this->unsnooze();
+
+        return ChoreSnooze::create([
+            'chore_id' => $this->id,
+            'user_id' => $user->id,
+            'snoozed_until' => now()->addHours($hours),
+        ]);
+    }
+
+    /**
+     * Remove every snooze from this chore (globally, for all users).
+     */
+    public function unsnooze(): void
+    {
+        ChoreSnooze::where('chore_id', $this->id)->delete();
+    }
+
+    /**
+     * When this recurring chore is next due, or null for one-time or never-completed chores.
+     */
+    public function getNextDueAt(): ?Carbon
+    {
+        $lastCompleted = $this->lastChoreLog?->completed_at;
+
+        if (!$lastCompleted || $this->occurrence_hours == 0) {
+            return null;
+        }
+
+        return $lastCompleted->copy()->addHours($this->occurrence_hours);
+    }
+
+    /**
+     * Which dashboard list this chore belongs to: snoozed, one_time, due, upcoming or scheduled.
+     * Mirrors the date math in getDue() and getUpcoming().
+     */
+    public function getStatus(): string
+    {
+        if ($this->activeSnooze) {
+            return 'snoozed';
+        }
+        if ($this->occurrence_hours == 0) {
+            return 'one_time';
+        }
+
+        $lastCompleted = $this->lastChoreLog?->completed_at;
+        $today = now()->startOfDay();
+
+        if (!$lastCompleted || $today->gt($lastCompleted->copy()->addHours($this->occurrence_hours)->startOfDay())) {
+            return 'due';
+        }
+
+        $upcomingAt = $lastCompleted->copy()->startOfDay()->addHours($this->occurrence_hours);
+        if ($today->copy()->addHours(72)->gte($upcomingAt) && $today->lte($upcomingAt)) {
+            return 'upcoming';
+        }
+
+        return 'scheduled';
+    }
+
     public function hasCompleted()
     {
         return (bool) $this->getLastChoreLog();
@@ -119,9 +199,22 @@ class Chore extends Model
         return $this->hasMany(ChoreLog::class)->orderBy('completed_at', 'desc');
     }
 
+    public function lastChoreLog()
+    {
+        return $this->hasOne(ChoreLog::class)->latestOfMany('completed_at');
+    }
+
     public function snoozes()
     {
         return $this->hasMany(ChoreSnooze::class);
+    }
+
+    public function activeSnooze()
+    {
+        return $this->hasOne(ChoreSnooze::class)->ofMany(
+            ['snoozed_until' => 'max'],
+            fn ($query) => $query->where('snoozed_until', '>', now())
+        );
     }
 
     public function assignedUser()

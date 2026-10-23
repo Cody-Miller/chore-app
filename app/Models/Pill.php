@@ -4,9 +4,11 @@ namespace App\Models;
 
 use App\Models\Traits\HasEffectiveDate;
 use App\Models\Traits\HasTags;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 
 class Pill extends Model
 {
@@ -60,38 +62,24 @@ class Pill extends Model
     }
 
     /**
+     * Get the most recent administration log.
+     */
+    public function lastPillLog()
+    {
+        return $this->hasOne(PillLog::class)->latestOfMany('administered_at');
+    }
+
+    /**
      * Get pills that are due now (scheduled time has passed but not given today).
      */
     public static function getDueNow()
     {
-        $now = now();
-        $currentTime = $now->format('H:i');
-        $effectiveDayStart = static::getEffectiveDayStart();
-        $effectiveDayEnd = static::getEffectiveDayEnd();
-
         return static::whereNull('deleted_at')
             ->active()
+            ->whereHas('pet')
             ->with(['pet', 'tags'])
             ->get()
-            ->filter(function ($pill) use ($currentTime, $effectiveDayStart, $effectiveDayEnd) {
-                // Check if any scheduled time has passed today
-                foreach ($pill->scheduled_times as $scheduledTime) {
-                    if ($scheduledTime <= $currentTime) {
-                        // Check if this dose was already given during the effective day
-                        $givenToday = $pill->pillLogs()
-                            ->where('administered_at', '>=', $effectiveDayStart)
-                            ->where('administered_at', '<=', $effectiveDayEnd)
-                            ->where('scheduled_time', $scheduledTime)
-                            ->exists();
-
-                        if (! $givenToday) {
-                            return true; // Due now
-                        }
-                    }
-                }
-
-                return false;
-            });
+            ->filter(fn ($pill) => $pill->doseSlots()->contains('status', 'due'));
     }
 
     /**
@@ -99,32 +87,12 @@ class Pill extends Model
      */
     public static function getUpcoming()
     {
-        $now = now();
-        $currentTime = $now->format('H:i');
-        $effectiveDayStart = static::getEffectiveDayStart();
-        $effectiveDayEnd = static::getEffectiveDayEnd();
-
         return static::whereNull('deleted_at')
             ->active()
+            ->whereHas('pet')
             ->with(['pet', 'tags'])
             ->get()
-            ->filter(function ($pill) use ($currentTime, $effectiveDayStart, $effectiveDayEnd) {
-                foreach ($pill->scheduled_times as $scheduledTime) {
-                    if ($scheduledTime > $currentTime) {
-                        $givenToday = $pill->pillLogs()
-                            ->where('administered_at', '>=', $effectiveDayStart)
-                            ->where('administered_at', '<=', $effectiveDayEnd)
-                            ->where('scheduled_time', $scheduledTime)
-                            ->exists();
-
-                        if (! $givenToday) {
-                            return true; // Upcoming
-                        }
-                    }
-                }
-
-                return false;
-            });
+            ->filter(fn ($pill) => $pill->doseSlots()->contains('status', 'upcoming'));
     }
 
     /**
@@ -137,12 +105,71 @@ class Pill extends Model
 
         return static::whereNull('deleted_at')
             ->active()
+            ->whereHas('pet')
             ->with(['pet', 'tags'])
             ->whereHas('pillLogs', function ($query) use ($effectiveDayStart, $effectiveDayEnd) {
                 $query->where('administered_at', '>=', $effectiveDayStart)
                     ->where('administered_at', '<=', $effectiveDayEnd);
             })
             ->get();
+    }
+
+    /**
+     * The effective day's dose slots in schedule order, judged at the given moment (default now).
+     * Each slot is ['time', 'label', 'at', 'status' => given|due|upcoming, 'log'].
+     */
+    public function doseSlots(?Carbon $at = null): Collection
+    {
+        $at = $at ?? now();
+        $date = static::getEffectiveDate($at);
+
+        $logs = $this->pillLogs()
+            ->with('user')
+            ->where('administered_at', '>=', static::getEffectiveDayStart($date))
+            ->where('administered_at', '<=', static::getEffectiveDayEnd($date))
+            ->get()
+            ->keyBy('scheduled_time');
+
+        return collect($this->scheduled_times ?? [])
+            ->unique()
+            ->map(function ($time) use ($date, $at, $logs) {
+                $slotAt = static::slotDateTime($date, $time);
+                $log = $logs->get($time);
+
+                return [
+                    'time' => $time,
+                    'label' => $slotAt->format('g:i A'),
+                    'at' => $slotAt,
+                    'status' => $log ? 'given' : ($slotAt->lte($at) ? 'due' : 'upcoming'),
+                    'log' => $log,
+                ];
+            })
+            ->sortBy('at')
+            ->values();
+    }
+
+    /**
+     * The slot that should be filled next: the earliest due slot, otherwise the earliest upcoming one.
+     */
+    public function nextDoseSlot(?Carbon $at = null): ?array
+    {
+        $slots = $this->doseSlots($at);
+
+        return $slots->firstWhere('status', 'due') ?? $slots->firstWhere('status', 'upcoming');
+    }
+
+    /**
+     * When a scheduled time falls on a given effective date.
+     * Times before the cutoff belong to the next calendar day.
+     */
+    public static function slotDateTime(Carbon $date, string $time): Carbon
+    {
+        $slotAt = $date->copy()->setTimeFromTimeString($time);
+        if ($slotAt->hour < static::DAY_CUTOFF_HOUR) {
+            $slotAt->addDay();
+        }
+
+        return $slotAt;
     }
 
     /**

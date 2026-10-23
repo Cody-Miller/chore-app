@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class ChoreLog extends Model
 {
@@ -31,6 +34,37 @@ class ChoreLog extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Record a chore completion for a user, or a 50/50 split between two users.
+     * Returns the created log(s).
+     */
+    public static function recordCompletion(Chore $chore, User $user, ?User $splitWith = null, ?Carbon $at = null): Collection
+    {
+        $completedAt = $at ?? now();
+
+        if (!$splitWith) {
+            return collect([static::create([
+                'chore_id' => $chore->id,
+                'user_id' => $user->id,
+                'completed_at' => $completedAt,
+                'weight_percentage' => 100.00,
+                'is_split' => false,
+            ])]);
+        }
+
+        // A shared ID links the two halves of a split
+        $splitGroupId = Str::uuid();
+
+        return collect([$user, $splitWith])->map(fn (User $splitUser) => static::create([
+            'chore_id' => $chore->id,
+            'user_id' => $splitUser->id,
+            'completed_at' => $completedAt,
+            'weight_percentage' => 50.00,
+            'split_group_id' => $splitGroupId,
+            'is_split' => true,
+        ]));
     }
 
     public static function getChoreLogsWeightByUsers($startDate, $endDate)
