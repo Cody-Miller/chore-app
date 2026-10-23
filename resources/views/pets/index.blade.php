@@ -12,17 +12,16 @@
                 <div class="p-4 text-gray-900 dark:text-gray-100">
                     @if ($pets && $pets->count() > 0)
                         <div x-data="{ search: '' }">
-                            <div class="flex flex-col sm:flex-row justify-between gap-4">
-                                <div class="flex-1 min-w-xl">
-                                    <input
-                                        type="text"
-                                        x-model="search"
-                                        placeholder="Search pets..."
-                                        class="min-w-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-500 rounded-md shadow-sm w-full"
-                                    >
-                                </div>
+                            <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-4">
+                                <input
+                                    type="text"
+                                    x-model="search"
+                                    placeholder="Search pets..."
+                                    class="w-full sm:w-auto sm:grow sm:basis-48 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-500 rounded-md shadow-sm"
+                                >
+
                                 <x-buttons.primary-link-button
-                                    class="justify-center"
+                                    class="justify-center sm:ml-auto"
                                     href="/pets/create"
                                 >
                                     Add Pet
@@ -31,7 +30,7 @@
 
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
                                 @foreach($pets as $pet)
-                                    <div x-show="!search || '{{ strtolower($pet->name) }}'.includes(search.toLowerCase())" class="border border-gray-300 dark:border-gray-700 rounded-lg p-4">
+                                    <div x-show="!search || @js(mb_strtolower($pet->name)).includes(search.toLowerCase())" class="border border-gray-300 dark:border-gray-700 rounded-lg p-4">
                                         <div class="flex items-center gap-4">
                                             @if($pet->photo_path)
                                                 <img src="{{ asset('storage/' . $pet->photo_path) }}" alt="{{ $pet->name }}" class="w-20 h-20 rounded-full object-cover">

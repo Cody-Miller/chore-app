@@ -18,11 +18,11 @@
                                     type="text"
                                     x-model="search"
                                     placeholder="Search medications or tags..."
-                                    class="w-full sm:w-64 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-500 rounded-md shadow-sm"
+                                    class="w-full sm:w-auto sm:grow sm:basis-48 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-500 rounded-md shadow-sm"
                                 >
 
                                 @if ($tags->isNotEmpty() || $hasFilters)
-                                    <form method="GET" action="{{ route('pills.index') }}" class="flex flex-col sm:flex-row sm:items-center gap-4">
+                                    <form method="GET" action="{{ route('pills.index') }}" class="contents">
                                         <select name="tag" onchange="this.form.submit()" aria-label="Filter by tag" class="w-full sm:w-auto dark:bg-gray-900 border-gray-300 dark:border-gray-700 dark:text-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-500">
                                             <option value="" @selected(empty($filters['tag']))>All tags</option>
                                             @foreach ($tags as $tag)
@@ -46,7 +46,7 @@
 
                             <ul class="mx-4">
                                 @foreach($pills as $pill)
-                                    <li x-show="!search || '{{ strtolower($pill->name) }}'.includes(search.toLowerCase()) || '{{ strtolower($pill->description) }}'.includes(search.toLowerCase()) || '{{ strtolower($pill->pet->name) }}'.includes(search.toLowerCase()) || @js($pill->tags->map(fn ($tag) => mb_strtolower($tag->name))).some(tag => tag.includes(search.toLowerCase()))">
+                                    <li x-show="!search || @js(mb_strtolower($pill->name)).includes(search.toLowerCase()) || @js(mb_strtolower($pill->description ?? '')).includes(search.toLowerCase()) || @js(mb_strtolower($pill->pet->name)).includes(search.toLowerCase()) || @js($pill->tags->map(fn ($tag) => mb_strtolower($tag->name))).some(tag => tag.includes(search.toLowerCase()))">
                                         <x-pill-display :pill="$pill"/>
                                     </li>
                                 @endforeach
