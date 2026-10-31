@@ -27,7 +27,7 @@ class UserActionMonth extends Charts
         $weights = [];
         $names = [];
         $records = ChoreLog::getChoreLogsWeightByUsers($startDate, $endDate);
-        // Pie computes the percentages itself, raw weights keep the tooltips meaningful
+        // Keep raw weights, the pie tooltip turns them into percentages of the visible total
         if ($records->sum('total_weight') > 0) {
             $this->hasData = true;
         }

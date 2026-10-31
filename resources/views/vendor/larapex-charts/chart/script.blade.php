@@ -36,6 +36,18 @@
         @if($chart->stroke())
             stroke: {!! $chart->stroke() !!},
         @endif
+        @if(in_array($chart->type(), ['pie', 'donut']))
+            // Show each slice's share of the visible total rather than its raw value
+            tooltip: {
+                y: {
+                    formatter: function (val, opts) {
+                        // Pie tooltips pass the chart context itself, not wrapped in opts.w like axis charts
+                        var total = (opts.w || opts).globals.series.reduce(function (sum, v) { return sum + v; }, 0);
+                        return (total ? val / total * 100 : 0).toFixed(1) + '%';
+                    }
+                }
+            },
+        @endif
     }
 
     var chart = new ApexCharts(document.querySelector("#{!! $chart->id() !!}"), options);
