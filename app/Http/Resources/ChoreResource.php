@@ -20,6 +20,7 @@ class ChoreResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,
+            'aliases' => $this->aliases ?? [],
             'weight' => $this->weight,
             'status' => $this->getStatus(),
             'repeats' => $this->repeatsLabel(),

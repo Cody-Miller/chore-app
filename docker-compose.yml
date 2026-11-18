@@ -18,6 +18,7 @@ services:
             XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
         volumes:
             - '.:/var/www/html'
+            - './docker/php/99-zz-memory-limit.ini:/etc/php/8.5/cli/conf.d/99-zz-memory-limit.ini:ro'
         networks:
             - sail
         depends_on:

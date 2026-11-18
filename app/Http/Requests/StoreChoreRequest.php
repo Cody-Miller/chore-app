@@ -43,6 +43,11 @@ class StoreChoreRequest extends FormRequest
                 'integer',
                 'between:1,5'
             ],
+            'aliases' => [
+                'nullable',
+                'string',
+                'max:500'
+            ],
             'assigned_user_id' => [
                 'nullable',
                 'integer',
