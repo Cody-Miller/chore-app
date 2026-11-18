@@ -63,6 +63,24 @@ class Speech
     }
 
     /**
+     * When something happened: "today at 7:50 AM", "yesterday at 7:10 PM", "on Saturday at 9:00 AM"
+     * within the last week, otherwise "on October 30 at 9:00 AM". In the viewer's timezone.
+     */
+    public static function past(Carbon $moment): string
+    {
+        $moment = $moment->inViewerTz();
+        $days = (int) round($moment->copy()->startOfDay()->diffInDays(now(Timezone::viewer())->startOfDay(), false));
+        $day = match (true) {
+            $days <= 0 => 'today',
+            $days === 1 => 'yesterday',
+            $days < 7 => 'on '.$moment->format('l'),
+            default => 'on '.$moment->format('F j'),
+        };
+
+        return "{$day} at ".static::time($moment);
+    }
+
+    /**
      * "today", "tomorrow", "yesterday", a weekday within the next week, otherwise "October 30",
      * in the viewer's timezone.
      */

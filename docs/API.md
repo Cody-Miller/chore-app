@@ -83,6 +83,19 @@ The server tries these rules in order and stops at the first one that matches an
 3. The input converted to a slug (`Do The Dishes!` → `do-the-dishes`)
 4. **Whole words** within the name (`dishes` → "Do the Dishes", `litter box` → "Clean Litter Box"). Partial words don't count, so `dish` won't match "Dishes".
 
+A chore's **aliases** count as names in every rule. They're set on the website ("Also called" on the chore form), e.g. "litter box, scoop the litter" for "Kitty Litter".
+
+**Chores** then get forgiving matching for speech-to-text, wherever a chore is named (`chores/complete`, `chores/last`, paths, snooze, history):
+
+5. The exact rules again with leading filler, articles and possessives removed ("the kitty litter", "my dishes").
+6. **Fuzzy scoring** against each chore's name and aliases. It allows extra words and verbs ("vacuumed the living room", "took out the trash", "dishwasher cycle") and mishearings ("kitty layer", "kiddie liter"). Common chore verbs like "clean" or "take" count for less than the words that tell chores apart.
+   - One clear best match is used.
+   - Two or three close scores give `409 ambiguous_chore` with a question: "Did you mean Take Out Recycling or Take Out Trash?"
+   - Nothing confident gives `404 chore_not_found`. If something came close, the error suggests it ("I couldn't find a chore called cat mats. Did you mean Cat Food or Kitty Litter?") and `candidates` lists the suggestions.
+7. If the request has a `text` field (the whole sentence as spoken), it breaks ties between close matches and is tried on its own when `chore` matches nothing.
+
+**Pets** get the same fuzzy matching on the read-only endpoints `pills/today?pet=` and `pills/last` ("cage" finds Kage). Giving medication (`pills/give`) still uses only the exact rules, so a mishearing can never log a dose for the wrong pet.
+
 The outcome depends on how many items match:
 
 - **One** match: it's used.
@@ -93,6 +106,8 @@ Only **active** pills exist for the API. Paused or deleted pills and pets are ne
 
 **People** go in the fields `by`, `split_with`, `for`, and `user`. A person can be given as a **first name**, a **full name**, or a **numeric id** from `GET /api/users`, all case-insensitive.
 
+- Punctuation, a possessive "'s", and filler or command words (mark, okay, ok, so, hey, has, did, and similar) are ignored, so `"Mark, Cody,"` and `"mark cody"` find Cody. A household member whose first name is one of those words (a real Mark) is still found.
+- Close-sounding names match: `"Kodi"` finds Cody, `"Sara"` finds Sarah. If two people sound equally close, you get `409 ambiguous_user` with "Did you mean Cody or Kody?". Only when nobody is close do you get `404 user_not_found`.
 - If two people share a first name, you get `409 ambiguous_user`; send the id instead.
 - If `by` is omitted, the action is credited to **API User**.
 - Only first names are ever returned.
@@ -146,6 +161,7 @@ When both are the same zone (the usual case), there is nothing to convert.
 | GET | `/api/chores/upcoming` | Chores due within the next 3 days |
 | GET | `/api/chores/one-time` | One-time chores |
 | GET | `/api/chores/snoozed` | Snoozed chores |
+| GET | `/api/chores/last?q=` | When a chore was last done, and by whom |
 | GET | `/api/chores/{chore}` | One chore, with its 10 most recent completions |
 | POST | `/api/chores/complete` | Complete a chore named in the body |
 | POST | `/api/chores/{chore}/complete` | Complete a chore named in the path |
@@ -159,7 +175,8 @@ When both are the same zone (the usual case), there is nothing to convert.
 | GET | `/api/pills` | All pills, with filters |
 | GET | `/api/pills/due` | Doses due now, across all pets |
 | GET | `/api/pills/upcoming` | Doses still to come today |
-| GET | `/api/pills/today` | Today's full dose schedule |
+| GET | `/api/pills/today` | Today's full dose schedule (`?pet=` for one pet) |
+| GET | `/api/pills/last?pet=` | When a pet last had each medication |
 | GET | `/api/pills/{pill}` | One pill, with its 10 most recent doses |
 | POST | `/api/pills/give` | Give medication (the server works out the pill and slot) |
 | POST | `/api/pills/{pill}/give` | Give a pill named in the path |
@@ -234,6 +251,7 @@ Chore points are each chore's weight, halved for split completions. Actions cred
   "name": "Do the Dishes",
   "slug": "do-the-dishes",
   "description": "Load and run the dishwasher.",
+  "aliases": ["dishwasher", "run the dishes"],
   "weight": 2,
   "status": "due",
   "repeats": "every 1 day",
@@ -251,6 +269,7 @@ Chore points are each chore's weight, halved for split completions. Actions cred
 | Field | Notes |
 | --- | --- |
 | `status` | One of the values below |
+| `aliases` | Other names the chore is matched by (§3). Empty list if none |
 | `repeats` | Speakable recurrence, e.g. `"every 3 days"` or `"every 1 month and 2 days"`; `"one time"` for one-time chores |
 | `assigned_to` | First name, or `null` for "anyone" |
 | `next_due_at` | `last_completed_at + occurrence_hours`. `null` for one-time chores and chores never completed |
@@ -280,6 +299,31 @@ Each returns a list of chore objects plus a `message`, for example:
 
 Long lists end with "and N more".
 
+#### `GET /api/chores/last?q={words as heard}`
+When a chore was last done and who did it. `q` is matched like any chore name (§3), so pass the words as heard. Optional `text`: the whole sentence as spoken.
+
+**200 OK**
+```json
+{
+  "success": true,
+  "message": "Kitty Litter was last done by Cody yesterday at 7:10 PM.",
+  "data": {
+    "chore": { /* chore object */ },
+    "completed_at": "2026-11-17T19:10:00-05:00",
+    "completed_by": "Cody",
+    "split_with": null,
+    "log_id": 913
+  }
+}
+```
+The message has one of these forms:
+- "Kitty Litter was last done by Cody yesterday at 7:10 PM."
+- "... by Cody and Sarah on Sunday at 9:05 AM." (a split; days within the last week are said by name, older ones as "on October 30")
+- "... was last done today at 8:00 AM." (credited to API User, so no name)
+- "Kitty Litter hasn't been done yet." (still `success: true`; `completed_at`, `completed_by` and `log_id` are `null`)
+
+Failures are the usual `404 chore_not_found` or `409 ambiguous_chore` (§3).
+
 #### `GET /api/chores/{chore}`
 A single chore object with an extra `recent_logs` array (the 10 latest chore-log objects, see below).
 
@@ -287,7 +331,8 @@ A single chore object with an extra `recent_logs` array (the 10 latest chore-log
 
 | Field | Required | Notes |
 | --- | --- | --- |
-| `chore` | yes, for `/chores/complete` | Name or slug (§3). Not used by the path form |
+| `chore` | yes, for `/chores/complete`, unless `text` is sent | Name, slug, alias or the words as heard (§3). Not used by the path form |
+| `text` | no | The whole sentence as spoken, e.g. "Mark, Cody, completed dishwasher cycle". Breaks ties and is tried when `chore` matches nothing (§3) |
 | `by` | no | Who did it. Defaults to API User |
 | `split_with` | no | Split 50/50 with this person. **Requires `by`** |
 | `at` | no | When it was done (§4). Defaults to now |
@@ -443,6 +488,43 @@ Each returns a list of dose objects across all pets, in time order, plus a `mess
 - upcoming: "1 medication dose is coming up later today: Kage's Metacam at 8:00 PM."
 - today: "3 of 5 medication doses have been given today. Still due: Kage's Metacam at 8:00 AM."
 
+`/today` takes an optional `?pet=` (fuzzy matched, §3). It then lists only that pet's doses, and the message is about that pet:
+- "Kage has had 0 of 2 medication doses today. Still due: Metacam at 8:00 AM."
+- "Kage has had 1 of 2 medication doses today. Nothing is due right now. Next is Metacam at 8:00 PM."
+- "Kage has had 2 of 2 medication doses today. All done for today."
+- "Kage has no medication doses scheduled today."
+
+An unknown pet is `404 pet_not_found`. Without `pet`, `/today` is unchanged.
+
+#### `GET /api/pills/last?pet={pet}` (or `&pill=`, or `?pill=` alone)
+When a pet last had its medication. With only `pet`, it covers each of the pet's active pills, most recent first. The pet is fuzzy matched (§3); the pill uses the exact rules.
+
+**200 OK**
+```json
+{
+  "success": true,
+  "message": "Kage last had Keppra today at 7:50 AM.",
+  "data": {
+    "pet": "Kage",
+    "pet_slug": "kage",
+    "pills": [
+      {
+        "pill": "Keppra",
+        "pill_slug": "keppra",
+        "dosage": "250 mg",
+        "last_given_at": "2026-11-18T07:50:00-05:00",
+        "last_given_by": "Sarah",
+        "scheduled_time": "08:00",
+        "log_id": 4410
+      }
+    ]
+  }
+}
+```
+With several pills: "Luna last had Gabapentin today at 8:00 AM and Thyroid Pill yesterday at 9:00 PM." Pills never given are left out of the message and come last in `pills`, with `null` times. If nothing was ever logged: "Kage hasn't had Keppra logged yet." (still `success: true`).
+
+Failures: `422 pet_or_pill_required` (neither given), `422 no_active_pills`, `404 pet_not_found` / `pill_not_found`, `409 ambiguous_pet` / `ambiguous_pill`.
+
 #### `GET /api/pills/{pill}`
 A single pill object plus `recent_logs` (the 10 latest pill-log objects).
 
@@ -539,7 +621,7 @@ Undoes a dose that was created in the last 24 hours. The message reads like "Rem
 | `code` | HTTP | Meaning | What the voice assistant should do |
 | --- | --- | --- | --- |
 | `ambiguous_pet` / `ambiguous_pill` / `ambiguous_chore` | 409 | Several matches | Read the `candidates` names and ask which one, then retry with the chosen `slug` |
-| `ambiguous_user` | 409 | Two people share that first name | Ask which one, then retry with their `id` |
+| `ambiguous_user` | 409 | Two people share that first name, or two sound equally close ("Did you mean Cody or Kody?") | Ask which one, then retry with their `id` |
 | `pet_not_found` / `pill_not_found` / `chore_not_found` / `user_not_found` | 404 | No match | Speak `error`, which includes suggestions when there are only a few options. Ask the user to repeat or choose |
 | `pet_or_pill_required` | 422 | A give request named neither a pet nor a pill | Ask which pet |
 | `no_active_pills` | 422 | The pet has no active medications | Speak `error` |
@@ -570,13 +652,15 @@ Undoes a dose that was created in the last 24 hours. The message reads like "Rem
 | "What chores are coming up?" | `GET /api/chores/upcoming` |
 | "What's due for Sarah?" | `GET /api/chores/due?for=Sarah` |
 | "Did the pets get their meds?" / "What meds are due?" | `GET /api/pills/due` (or `/api/pills/today` for the full picture) |
+| "Does Kage need medication?" | `GET /api/pills/today?pet=Kage`, then speak `message` |
+| "When did Kage last have her meds?" | `GET /api/pills/last?pet=Kage`, then speak `message` |
 | "I did the dishes." | `POST /api/chores/complete` `{"chore": "dishes"}` |
 | "Sarah did the dishes." | `POST /api/chores/complete` `{"chore": "dishes", "by": "Sarah"}` |
 | "Cody and Sarah cleaned the garage." | `POST /api/chores/complete` `{"chore": "clean the garage", "by": "Cody", "split_with": "Sarah"}` |
 | "I mowed the lawn an hour ago." | `POST /api/chores/complete` `{"chore": "mow the lawn", "at": "1 hour ago"}` |
 | "Snooze the gutters for a week." | `POST /api/chores/gutters/snooze` `{"duration": "1 week"}` |
 | "Unsnooze the gutters." | `DELETE /api/chores/gutters/snooze` |
-| "When did someone last do the litter box?" | `GET /api/chores/litter%20box`, then read `last_completed_at` and `last_completed_by` |
+| "When was the litter box last done?" | `GET /api/chores/last?q=litter%20box`, then speak `message` |
 | "I gave Kage her meds." | `POST /api/pills/give` `{"pet": "Kage"}` (a `409` means ask which medication) |
 | "I gave Luna her thyroid pill." | `POST /api/pills/give` `{"pet": "Luna", "pill": "thyroid"}` |
 | "I gave the Metacam." | `POST /api/pills/give` `{"pill": "Metacam"}` |

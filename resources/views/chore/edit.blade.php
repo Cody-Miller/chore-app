@@ -17,6 +17,7 @@
 
                         <x-form.input :default="$chore->name" name='name'>{{ __('Name:') }}</x-form.input>
                         <x-form.input :default="$chore->description" name='desc'>{{ __('Description:') }}</x-form.input>
+                        <x-form.input :default="implode(', ', $chore->aliases ?? [])" name='aliases' placeholder="litter box, scoop the litter">{{ __('Also called (comma separated, for voice commands):') }}</x-form.input>
                         <x-form.select-input name="assigned_user_id" :label-content="'Assigned To:'">
                             <x-form.select-input-option value="" :selected="!old('assigned_user_id', $chore->assigned_user_id)">
                                 {{ __('Unassigned') }}

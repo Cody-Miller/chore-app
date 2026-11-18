@@ -43,6 +43,7 @@ Route::middleware(['auth:sanctum', UseViewerTimezone::class])->group(function ()
     Route::get('/chores/one-time', [ChoreApiController::class, 'oneTime']);
     Route::get('/chores/snoozed', [ChoreApiController::class, 'snoozed']);
     Route::post('/chores/complete', [ChoreApiController::class, 'complete']);
+    Route::get('/chores/last', [ChoreApiController::class, 'last']);
     Route::get('/chores/{chore}', [ChoreApiController::class, 'show']);
     Route::post('/chores/{chore}/complete', [ChoreApiController::class, 'complete']);
     Route::post('/chores/{chore}/snooze', [ChoreApiController::class, 'snooze']);
@@ -63,6 +64,7 @@ Route::middleware(['auth:sanctum', UseViewerTimezone::class])->group(function ()
     Route::get('/pills/upcoming', [PillApiController::class, 'upcoming']);
     Route::get('/pills/today', [PillApiController::class, 'today']);
     Route::post('/pills/give', [PillApiController::class, 'give']);
+    Route::get('/pills/last', [PillApiController::class, 'last']);
     Route::get('/pills/{pill}', [PillApiController::class, 'show']);
     Route::post('/pills/{pill}/give', [PillApiController::class, 'give']);
     Route::post('/record-medication', [PillApiController::class, 'give']); // Older name for /pills/give

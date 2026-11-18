@@ -20,7 +20,28 @@ class Chore extends Model
         'weight',
         'occurrence_hours',
         'assigned_user_id',
+        'aliases',
     ];
+
+    protected $casts = [
+        'aliases' => 'array',
+    ];
+
+    /**
+     * Other names from a comma-separated list ("litter box, scoop the litter"): trimmed, without
+     * blanks or repeats. Null when there are none.
+     */
+    public static function parseAliases(?string $input): ?array
+    {
+        $aliases = collect(explode(',', (string) $input))
+            ->map(fn ($alias) => trim(preg_replace('/\s+/', ' ', $alias)))
+            ->filter()
+            ->unique(fn ($alias) => mb_strtolower($alias))
+            ->values()
+            ->all();
+
+        return $aliases ?: null;
+    }
 
     /**
      * Get the route key for the model.

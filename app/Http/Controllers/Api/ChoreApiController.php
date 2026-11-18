@@ -93,19 +93,55 @@ class ChoreApiController extends ApiController
     }
 
     /**
+     * GET /api/chores/last?q=kitty+litter
+     * When a chore was last done and by whom. Optional: text (the whole sentence as spoken).
+     */
+    public function last(Request $request): JsonResponse
+    {
+        $request->validate([
+            'q' => ['required', 'string'],
+            'text' => ['nullable', 'string'],
+        ]);
+
+        $chore = NameResolver::chore($request->query('q'), $request->query('text'))->load(ChoreResource::RELATIONS);
+        $log = $chore->lastChoreLog;
+        $partner = $log?->splitPartner();
+        $data = [
+            'chore' => new ChoreResource($chore),
+            'completed_at' => $log?->completed_at->inViewerTz()->toIso8601String(),
+            'completed_by' => $log?->user?->first_name,
+            'split_with' => $partner?->user?->first_name,
+            'log_id' => $log?->id,
+        ];
+
+        if (!$log) {
+            return $this->ok($data, "{$chore->name} hasn't been done yet.");
+        }
+
+        $who = match (true) {
+            (bool) $partner => " by {$log->user?->first_name} and {$partner->user?->first_name}",
+            $log->user && !$log->user->isApiUser() => " by {$log->user->first_name}",
+            default => '',
+        };
+
+        return $this->ok($data, "{$chore->name} was last done{$who} ".Speech::past($log->completed_at).'.');
+    }
+
+    /**
      * POST /api/chores/complete {"chore": "dishes"} or POST /api/chores/{chore}/complete
-     * Optional: by, split_with (needs by), at, dry_run.
+     * Optional: by, split_with (needs by), at, dry_run, text (the whole sentence as spoken).
      */
     public function complete(Request $request, ?string $chore = null): JsonResponse
     {
         $request->validate([
-            'chore' => [$chore === null ? 'required' : 'nullable', 'string'],
+            'chore' => [$chore === null ? 'required_without:text' : 'nullable', 'string'],
+            'text' => ['nullable', 'string'],
             'by' => ['nullable', 'string'],
             'split_with' => ['nullable', 'string'],
             'at' => ['nullable', 'string'],
         ]);
 
-        $chore = NameResolver::chore($chore ?? $request->input('chore'));
+        $chore = NameResolver::chore($chore ?? $request->input('chore') ?? $request->input('text'), $request->input('text'));
         $user = NameResolver::user($request->input('by'));
         $splitWith = null;
 

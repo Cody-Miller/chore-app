@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\ApiException;
 use App\Http\Resources\PillLogResource;
 use App\Http\Resources\PillResource;
+use App\Models\Pet;
 use App\Models\Pill;
 use App\Services\Api\NameResolver;
 use App\Services\MedicationGiver;
 use App\Support\Speech;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -61,14 +64,81 @@ class PillApiController extends ApiController
     }
 
     /**
-     * GET /api/pills/today
-     * Every dose today with its status and who gave it.
+     * GET /api/pills/today?pet=
+     * Every dose today with its status and who gave it. With pet, only that pet's doses
+     * and a message about that pet ("Does Kage need medication?").
      */
-    public function today(): JsonResponse
+    public function today(Request $request): JsonResponse
     {
-        $doses = PillResource::doses();
+        $request->validate(['pet' => ['nullable', 'string']]);
 
-        return $this->ok($doses, $this->todayMessage($doses));
+        if (!$request->filled('pet')) {
+            $doses = PillResource::doses();
+
+            return $this->ok($doses, $this->todayMessage($doses));
+        }
+
+        $pet = NameResolver::pet($request->query('pet'), fuzzy: true);
+        $doses = PillResource::doses(null, $pet);
+
+        return $this->ok($doses, $this->petTodayMessage($pet, $doses));
+    }
+
+    /**
+     * GET /api/pills/last?pet=kage (or &pill=, or pill alone)
+     * When each of the pet's medications was last given, most recent first.
+     */
+    public function last(Request $request): JsonResponse
+    {
+        $request->validate([
+            'pet' => ['nullable', 'string'],
+            'pill' => ['nullable', 'string'],
+        ]);
+
+        if (!$request->filled('pet') && !$request->filled('pill')) {
+            throw new ApiException('Which pet or medication? Name at least one.', 'pet_or_pill_required', 422);
+        }
+
+        $pet = $request->filled('pet') ? NameResolver::pet($request->query('pet'), fuzzy: true) : null;
+
+        if ($request->filled('pill')) {
+            $pills = EloquentCollection::make([NameResolver::pill($request->query('pill'), $pet)]);
+        } else {
+            $pills = $pet->activePills()->with('pet')->orderBy('name')->get();
+
+            if ($pills->isEmpty()) {
+                throw new ApiException("{$pet->name} doesn't have any active medications.", 'no_active_pills', 422);
+            }
+        }
+
+        $pet ??= $pills->first()->pet;
+        $pills->load('lastPillLog.user');
+        $given = $pills->filter(fn (Pill $pill) => $pill->lastPillLog)
+            ->sortByDesc(fn (Pill $pill) => $pill->lastPillLog->administered_at)
+            ->values();
+        $data = [
+            'pet' => $pet->name,
+            'pet_slug' => $pet->slug,
+            'pills' => $given->concat($pills->reject(fn (Pill $pill) => $pill->lastPillLog))->map(fn (Pill $pill) => [
+                'pill' => $pill->name,
+                'pill_slug' => $pill->slug,
+                'dosage' => $pill->dosage,
+                'last_given_at' => $pill->lastPillLog?->administered_at->inViewerTz()->toIso8601String(),
+                'last_given_by' => $pill->lastPillLog?->user?->first_name,
+                'scheduled_time' => $pill->lastPillLog?->scheduled_time,
+                'log_id' => $pill->lastPillLog?->id,
+            ])->values(),
+        ];
+
+        if ($given->isEmpty()) {
+            $what = $pills->count() === 1 ? $pills->first()->name : 'any medication';
+
+            return $this->ok($data, "{$pet->name} hasn't had {$what} logged yet.");
+        }
+
+        $parts = $given->map(fn (Pill $pill) => "{$pill->name} ".Speech::past($pill->lastPillLog->administered_at));
+
+        return $this->ok($data, "{$pet->name} last had ".Speech::list($parts).'.');
     }
 
     /**
@@ -143,6 +213,26 @@ class PillApiController extends ApiController
     private function spokenDose(array $dose): string
     {
         return Speech::possessive($dose['pet'])." {$dose['pill']} at {$dose['label']}";
+    }
+
+    /**
+     * "Kage has had 1 of 2 medication doses today. Still due: Metacam at 8:00 AM."
+     */
+    private function petTodayMessage(Pet $pet, Collection $doses): string
+    {
+        if ($doses->isEmpty()) {
+            return "{$pet->name} has no medication doses scheduled today.";
+        }
+
+        $due = $doses->where('status', 'due');
+        $next = $doses->firstWhere('status', 'upcoming');
+        $message = "{$pet->name} has had {$doses->where('status', 'given')->count()} of ".Speech::count($doses->count(), 'medication dose').' today.';
+
+        return $message.match (true) {
+            $due->isNotEmpty() => ' Still due: '.Speech::list($due->map(fn ($dose) => "{$dose['pill']} at {$dose['label']}")).'.',
+            (bool) $next => " Nothing is due right now. Next is {$next['pill']} at {$next['label']}.",
+            default => ' All done for today.',
+        };
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Pet;
 use App\Models\Pill;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -63,13 +64,14 @@ class PillResource extends JsonResource
     }
 
     /**
-     * Today's doses across every active pill, in time order, optionally only one status.
+     * Today's doses across every active pill, in time order, optionally only one status or one pet's.
      */
-    public static function doses(?string $status = null): Collection
+    public static function doses(?string $status = null, ?Pet $pet = null): Collection
     {
         return Pill::active()
             ->whereHas('pet')
             ->with('pet')
+            ->when($pet, fn ($q) => $q->where('pet_id', $pet->id))
             ->get()
             ->flatMap(fn (Pill $pill) => $pill->doseSlots()
                 ->when($status, fn ($slots) => $slots->where('status', $status))
